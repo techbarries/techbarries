@@ -20,7 +20,9 @@ jobs:
 
         # Install Python Dependencies
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -28,10 +30,11 @@ jobs:
           aws-access-key-id: "AKIAT2NK673BNLTM6Z5B"
           aws-secret-access-key: "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"
           aws-region: us-east-1
-
+      - name: Run migrations
+        run: python manage.py migrate
         # Build App and Run Application Test
-      - name: Build Application and Run unit Test
-        run: python run.py & pytest
+      # - name: Build Application and Run unit Test
+      #   run: python run.py & pytest
 
   continuous-deployment:
     runs-on: ubuntu-latest
