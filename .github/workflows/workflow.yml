@@ -5,16 +5,18 @@ on:
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+      - uses: actions/checkout@v3
 
-      - name: Set up Python 3.8.10
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
         with:
-          python-version: 3.8.10
+          python-version: '3.8'
 
         # Install Python Dependencies
       - name: Install dependencies
@@ -23,9 +25,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: AKIAT2NK673BNLTM6Z5B
-          aws-secret-access-key: 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
-          aws-region: ap-southeast-1
+          aws-access-key-id: "AKIAT2NK673BNLTM6Z5B"
+          aws-secret-access-key: "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"
+          aws-region: us-east-1
 
         # Build App and Run Application Test
       - name: Build Application and Run unit Test
@@ -39,16 +41,16 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: AKIAT2NK673BNLTM6Z5B
-          aws-secret-access-key: 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
-          aws-region: ap-southeast-1
+          aws-access-key-id: "AKIAT2NK673BNLTM6Z5B"
+          aws-secret-access-key: "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"
+          aws-region: us-east-1
 
       - name: Create CodeDeploy Deployment
         id: deploy
         run: |
           # Assuming the Deployment Group is already setup
           aws deploy create-deployment \
-            --application-name application-name \
-            --deployment-group-name AppDeploymentGroupName \
+            --application-name pulse-api \
+            --deployment-group-name pulseAppDeploy \
             --deployment-config-name CodeDeployDefault.OneAtATime \
             --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
