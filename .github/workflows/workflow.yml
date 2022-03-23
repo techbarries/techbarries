@@ -2,48 +2,48 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ master ]
-
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
     steps:
-      # Step 1
       - uses: actions/checkout@v2
-      # Step 2
-      - name: Set up Python 3.7
+
+      - name: Set up Python 3.8.10
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
-      # Step 3
+          python-version: 3.8.10
+
+        # Install Python Dependencies
       - name: Install dependencies
         run: pip install -r requirements.txt
-      # Step 4
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id:${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key:${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
-      # Step 5
+
+        # Build App and Run Application Test
       - name: Build Application and Run unit Test
-        run: python app.py & pytest
+        run: python run.py & pytest
 
   continuous-deployment:
     runs-on: ubuntu-latest
     needs: [continuous-integration]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     steps:
-     # Step 1
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id:${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key:${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
-     # Step 2
+
       - name: Create CodeDeploy Deployment
         id: deploy
         run: |
+          # Assuming the Deployment Group is already setup
           aws deploy create-deployment \
             --application-name application-name \
             --deployment-group-name AppDeploymentGroupName \
