@@ -15,9 +15,13 @@ class University(TrackingModel):
     country=models.CharField(max_length=255,blank=True)
     university_picture=models.ImageField(blank=True)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_uni",on_delete=models.CASCADE)
+    def __str__(self):
+        return self.university_name
 class Venue(TrackingModel):
     venue_name=models.CharField(max_length=255)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",on_delete=models.CASCADE)
+    def __str__(self):
+        return self.venue_name
 class VenueImage(models.Model):
     venue = models.ForeignKey(Venue, related_name='venue_images',on_delete=models.CASCADE)
     image = models.ImageField()
