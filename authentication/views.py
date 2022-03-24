@@ -2,8 +2,9 @@ import imp
 from telnetlib import STATUS
 from urllib import response
 from django.shortcuts import render
-from rest_framework.generics import GenericAPIView
-from authentication.serializers import RegisterSerializer
+from rest_framework.generics import GenericAPIView,ListAPIView
+from authentication.models import User
+from authentication.serializers import RegisterSerializer, UserSerializer
 from rest_framework import response,status
 # Create your views here.
 
@@ -19,3 +20,8 @@ class RegisterAPIView(GenericAPIView):
         return response.Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserListAPIView(ListAPIView):
+    serializer_class=UserSerializer
+    
+    def get_queryset(self):
+        return User.objects.filter(is_active=1)
