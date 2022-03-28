@@ -2,3 +2,6 @@ django
 djangorestframework
 drf_yasg
 Pillow
+python-decouple
+django-storages
+boto3
