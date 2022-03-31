@@ -14,12 +14,14 @@ class University(TrackingModel):
     state=models.CharField(max_length=255,blank=True)
     country=models.CharField(max_length=255,blank=True)
     university_picture=models.ImageField(upload_to="university",blank=True,)
-    created_by=models.ForeignKey(to=User,related_name="created_by_user_uni",on_delete=models.CASCADE)
+    created_by=models.ForeignKey(to=User,related_name="created_by_user_uni",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    class  Meta:  #new
+        verbose_name_plural  =  "Universities"
     def __str__(self):
         return self.university_name
 class Venue(TrackingModel):
     venue_name=models.CharField(max_length=255)
-    created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",on_delete=models.CASCADE)
+    created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     def __str__(self):
         return self.venue_name
 class VenueImage(models.Model):
@@ -48,7 +50,7 @@ class Event(TrackingModel):
     cover_fee=models.PositiveIntegerField(default=0)
     bottle_service_fee=models.PositiveIntegerField(default=0)
     boost_enabled=models.BooleanField(default=0,blank=True)
-    created_by=models.ForeignKey(to=User,related_name="created_by_user_event",on_delete=models.CASCADE)
+    created_by=models.ForeignKey(to=User,related_name="created_by_user_event",blank=True,null=True,default=None,on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name

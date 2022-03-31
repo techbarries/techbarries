@@ -13,6 +13,6 @@ class EventImageInline(admin.TabularInline):
     extra = 3
 class EventAdmin(admin.ModelAdmin):
     inlines = [ EventImageInline, ]
-admin.site.register([University])
+admin.site.register(University)
 admin.site.register(Venue, VenueAdmin)
 admin.site.register(Event, EventAdmin)

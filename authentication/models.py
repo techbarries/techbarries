@@ -11,12 +11,12 @@ from django.contrib.auth.models import (
 
 
 class MyUserManager(UserManager):
-    def _create_user(self, username, email, password, **extra_fields):
+    def _create_user(self, email,password,username=None, **extra_fields):
         """
         Create and save a user with the given username, email, and password.
         """
-        if not username:
-            raise ValueError("The given username must be set")
+        # if not username:
+        #     raise ValueError("The given username must be set")
         if not email:
             raise ValueError("The given email must be set")
         email = self.normalize_email(email)
@@ -26,12 +26,12 @@ class MyUserManager(UserManager):
         user.save(using=self._db)
         return user
 
-    def create_user(self, username, email, password=None, **extra_fields):
+    def create_user(self,email, username=None , password=None, **extra_fields):
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
-        return self._create_user(username, email, password, **extra_fields)
+        return self._create_user(email, password,username, **extra_fields)
 
-    def create_superuser(self, username, email, password=None, **extra_fields):
+    def create_superuser(self,  email,username=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -40,7 +40,7 @@ class MyUserManager(UserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
 
-        return self._create_user(username, email, password, **extra_fields)
+        return self._create_user(email, password,username, **extra_fields)
 
         
 class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
@@ -57,19 +57,21 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
         ("username"),
         max_length=150,
         unique=False,
-        help_text=(
-            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
-        ),
         validators=[username_validator],
         error_messages={
             "unique":("A user with that username already exists."),
         },
+        blank=True,
+        null=True, default=None
     )
+    uid = models.CharField(("uid"), max_length=150, blank=True)
+    user_token = models.CharField(("user token"), max_length=150, blank=True)
     first_name = models.CharField(("first name"), max_length=150, blank=True)
     last_name = models.CharField(("last name"), max_length=150, blank=True)
     profile_picture_url = models.CharField(("profile picture url"), max_length=250, blank=True)
     phone_number = models.CharField(("phone number"), max_length=50, blank=True)
     country = models.CharField(("Country"), max_length=100, blank=True)
+    university=models.OneToOneField("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)
     email = models.EmailField(("email address"), blank=False,unique=True)
     is_staff = models.BooleanField(
         ("staff status"),
@@ -90,7 +92,18 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
 
     EMAIL_FIELD = "email"
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
+    # REQUIRED_FIELDS = ["username"]
+
+    @property
+    def token(self):
+        return ""
+
+class Device(TrackingModel):
+    device_name=models.CharField(max_length=255,blank=True)
+    fcm_token=models.CharField(max_length=255,blank=True)
+    os=models.CharField(max_length=255,blank=True) 
+    user_id=models.ForeignKey(to=User,related_name="user",on_delete=models.CASCADE)      
+    created_by=models.ForeignKey(to=User,related_name="created_by_user",on_delete=models.CASCADE,null=True,default=None)      
 
     @property
     def token(self):

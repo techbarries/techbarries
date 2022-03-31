@@ -1,7 +1,9 @@
-from authentication.views import RegisterAPIView,UserListAPIView
+from authentication.views import DeviceByUserView, RegisterAPIView, UserByTokenView,UserListAPIView
 from django.urls import path
 
 urlpatterns=[
-    path('register',RegisterAPIView.as_view(),name="register"),
-    path('users',UserListAPIView.as_view(),name="register")
+    path('pulse-user',RegisterAPIView.as_view(),name="pulseUser"),
+    path('users',UserListAPIView.as_view(),name="users"),
+    path('user/<int:user_id>/devices',DeviceByUserView.as_view({'get': 'list',}),name="device-by-user"),
+    path('user/token/<slug:user_token>',UserByTokenView.as_view({'get': 'retrieve',}),name="user-by-token")
 ]

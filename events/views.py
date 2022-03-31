@@ -22,6 +22,13 @@ class UniversityListAPIView(ListAPIView):
 class UniversityAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class=UniversitySerializer
     lookup_field="id"
+    queryset = University.objects.all()
+
+class CreateUniversityAPIView(CreateAPIView):
+    serializer_class=UniversitySerializer
+
+    def perform_create(self, serializer):
+        return super().perform_create(serializer)
 
 class VenueListAPIView(ListAPIView):
     serializer_class=VenueSerializer
@@ -32,4 +39,10 @@ class VenueListAPIView(ListAPIView):
 class VenueAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class=VenueSerializer
     lookup_field="id"     
-        
+    queryset = Venue.objects.all()
+
+class CreateVenueAPIView(CreateAPIView):
+    serializer_class=VenueSerializer
+
+    def perform_create(self, serializer):
+        return super().perform_create(serializer)    

@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'authentication',
     'events',
     'rest_framework',
-    'drf_yasg'
+    'drf_yasg',
+    'django_filters'
 ]
 
 MIDDLEWARE = [
