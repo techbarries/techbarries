@@ -71,7 +71,7 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
     profile_picture_url = models.CharField(("profile picture url"), max_length=250, blank=True)
     phone_number = models.CharField(("phone number"), max_length=50, blank=True)
     country = models.CharField(("Country"), max_length=100, blank=True)
-    university=models.OneToOneField("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)
+    university=models.ForeignKey("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)
     email = models.EmailField(("email address"), blank=False,unique=True)
     is_staff = models.BooleanField(
         ("staff status"),
