@@ -44,6 +44,6 @@ urlpatterns = [
 ]
 
 
-admin.site.site_header="Pulse Night Life"
-admin.site.site_title="Pulse Night Life"
-admin.site.site_title="Pulse Night Life"
+admin.site.site_header="New Backend| Pulse Night Life"
+admin.site.site_title="New Backend| Pulse Night Life"
+admin.site.site_title="New Backend| Pulse Night Life"
