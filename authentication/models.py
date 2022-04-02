@@ -65,7 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
         null=True, default=None
     )
     uid = models.CharField(("uid"), max_length=150, blank=True)
-    user_token = models.CharField(("user token"), max_length=150, blank=True)
+    user_token = models.TextField(("user token"),default=None, blank=True)
     first_name = models.CharField(("first name"), max_length=150, blank=True)
     last_name = models.CharField(("last name"), max_length=150, blank=True)
     profile_picture_url = models.CharField(("profile picture url"), max_length=250, blank=True)
