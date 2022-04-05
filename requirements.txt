@@ -6,3 +6,4 @@ python-decouple
 django-storages
 boto3
 django-filter
+twilio

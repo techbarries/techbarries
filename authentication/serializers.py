@@ -2,7 +2,7 @@ from dataclasses import fields
 import imp
 from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
-from authentication.models import Device, User
+from authentication.models import Device, SmsOTP, User
 
 class PulseUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,4 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
 class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model=Device
-        fields='__all__'           
+        fields='__all__'
+
+class SmsOTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=SmsOTP
+        fields='__all__'

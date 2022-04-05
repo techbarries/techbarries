@@ -1,17 +1,21 @@
 from ast import Not
+from datetime import datetime,timezone
 from email import message
 import imp
 from telnetlib import STATUS
 from urllib import response
 from rest_framework.generics import GenericAPIView,CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
-from authentication.models import Device, User
+from authentication.models import Device, SmsOTP, User
 from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserSerializer
 from rest_framework import response,status
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
+from django.core.exceptions import ObjectDoesNotExist
+import random
 
+from authentication.twilio import Twilio
 # Create your views here.
 
 class PulseUserAPIView(GenericAPIView):
@@ -79,3 +83,69 @@ class UserByTokenView(APIView):
                 return Response(res)
         res.update(status=False,message="Not found")
         return Response(res)
+
+class GenerateSmsOTP(APIView):
+    def get(self,request,phone):
+        phoneNumber=SmsOTP.objects.filter(phone=phone).first()
+        otp = random.randint(1000, 9999)
+        if phoneNumber is not None:
+            delta=datetime.now(timezone.utc)-phoneNumber.updated_at
+            delta=delta.total_seconds()/ (60 * 60)
+            delta=round(delta,1)
+            if phoneNumber.counter > 5 and delta < 1:
+                res={"status":False,"message":"Too many tries.Can try after 1 hour.","data":{"counter":phoneNumber.counter}}
+                return Response(res)
+            elif phoneNumber.counter > 5 and delta > 0:
+                phoneNumber.counter=0
+            else:
+                phoneNumber.counter+=1
+            phoneNumber.otp=otp
+            phoneNumber.is_verified=0
+            phoneNumber.save()
+            twilio=Twilio("Your Otp Code is:"+str(otp),phone)
+            smsResponse=twilio.send()
+            if smsResponse==1:
+                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp,"counter":phoneNumber.counter,"delta": delta}}
+                return Response(res)
+            elif smsResponse==2:   
+                res={"status":False,"message":"Twilio Unable to send otp.","data":{}}
+                return Response(res)
+            else:
+                res={"status":False,"message":"Invalid phone number.","data":{}}
+                return Response(res)        
+        else:  
+            SmsOTP.objects.create(phone=phone,otp=otp,is_verified=0)
+            twilio=Twilio("Your Otp Code is:"+str(otp),phone)
+            smsResponse=twilio.send()
+            if smsResponse==1:
+                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp}}
+                return Response(res)
+            elif smsResponse==2:   
+                res={"status":False,"message":"Twilio Unable to send otp.","data":{}}
+                return Response(res)
+            else:
+                res={"status":False,"message":"Invalid phone number.","data":{}}
+                return Response(res)
+                
+class VerifySmsOTP(APIView):        
+    @staticmethod
+    def post(request,phone,otp):
+        if otp is None:
+            res={"status":False,"message":"Otp is required","data":{}}
+            return Response(res)
+        phoneNumber=SmsOTP.objects.filter(phone=phone,otp=otp,is_verified=0).first()
+        if phoneNumber is not None:
+            phoneNumber.is_verified=1
+            phoneNumber.save()
+            res={"status":True,"message":"Otp verified successfully","data":{}}
+            return Response(res)
+        res={"status":False,"message":"Invalid otp.","data":{}}
+        return Response(res)
+ 
+
+
+            
+
+            
+
+        

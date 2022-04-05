@@ -109,3 +109,11 @@ class Device(TrackingModel):
     @property
     def token(self):
         return ""
+
+class SmsOTP(TrackingModel,models.Model):
+    phone = models.IntegerField(blank=False)
+    otp = models.IntegerField(null=True,blank=False)
+    is_verified = models.BooleanField(blank=False, default=False)
+    counter = models.IntegerField(default=0, null=True,blank=False)
+def __str__(self):
+        return str(self.phone)        

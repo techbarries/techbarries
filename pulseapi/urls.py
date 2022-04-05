@@ -35,6 +35,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include("authentication.urls")),
     path('api/device/', include("authentication.device_urls")),
+    path('api/otp/', include("authentication.otp_urls")),
     path('api/event/', include("events.urls")),
     path('api/university/', include("events.uni_urls")),
     path('api/venue/', include("events.venue_urls")),
