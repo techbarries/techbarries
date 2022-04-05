@@ -115,5 +115,5 @@ class SmsOTP(TrackingModel,models.Model):
     otp = models.IntegerField(null=True,blank=False)
     is_verified = models.BooleanField(blank=False, default=False)
     counter = models.IntegerField(default=0, null=True,blank=False)
-def __str__(self):
-        return str(self.phone)        
+    def __str__(self):
+            return str(self.phone)        
