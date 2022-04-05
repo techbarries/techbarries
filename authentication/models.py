@@ -65,10 +65,11 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
         null=True, default=None
     )
     uid = models.CharField(("uid"), max_length=150, blank=True)
-    user_token = models.TextField(("user token"),default=None, blank=True)
+    user_token = models.TextField(("user token"),default=None,null=True,blank=True)
     first_name = models.CharField(("first name"), max_length=150, blank=True)
     last_name = models.CharField(("last name"), max_length=150, blank=True)
     profile_picture_url = models.CharField(("profile picture url"), max_length=250, blank=True)
+    profile_picture_image = models.ImageField(upload_to="profile/%Y/%m/%d/",null=True,blank=True,)
     phone_number = models.CharField(("phone number"), max_length=50, blank=True)
     country = models.CharField(("Country"), max_length=100, blank=True)
     university=models.ForeignKey("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)

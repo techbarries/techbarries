@@ -13,7 +13,7 @@ class University(TrackingModel):
     city=models.CharField(max_length=255,blank=True)
     state=models.CharField(max_length=255,blank=True)
     country=models.CharField(max_length=255,blank=True)
-    university_picture=models.ImageField(upload_to="university",blank=True,)
+    university_picture=models.ImageField(upload_to="university/%Y/%m/%d/",blank=True,)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_uni",blank=True,null=True,default=None,on_delete=models.CASCADE)
     class  Meta:  #new
         verbose_name_plural  =  "Universities"
@@ -26,13 +26,13 @@ class Venue(TrackingModel):
         return self.venue_name
 class VenueImage(models.Model):
     venue = models.ForeignKey(Venue, related_name='venue_images',on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="venue",blank=True)
+    image = models.ImageField(upload_to="venue/%Y/%m/%d/",blank=True)
 class Event(TrackingModel):
     class AccessType(models.TextChoices):
         PUBLIC = 'PUBLIC', ('PUBLIC')
         PRIVATE = 'PRIVATE', ('PRIVATE')
     name=models.CharField(max_length=255)
-    coverPhoto=models.ImageField(upload_to="event_cover",blank=True)
+    coverPhoto=models.ImageField(upload_to="event_cover/%Y/%m/%d/",blank=True)
     description=models.TextField(blank=True)
     address=models.CharField(max_length=255,blank=True)
     event_address_unit=models.CharField(max_length=255,blank=True)
@@ -57,4 +57,4 @@ class Event(TrackingModel):
         
 class EventImage(models.Model):
     event = models.ForeignKey(Event, related_name='event_images',on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="event",blank=True)
+    image = models.ImageField(upload_to="event/%Y/%m/%d/",blank=True)

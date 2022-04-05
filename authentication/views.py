@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 # Create your views here.
 
-class RegisterAPIView(GenericAPIView):
+class PulseUserAPIView(GenericAPIView):
     serializer_class=PulseUserSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
