@@ -72,11 +72,11 @@ class DeviceByUserView(viewsets.ModelViewSet):
 
 class UserByTokenView(APIView):
     serializer_class=PulseUserSerializer
-    def get(self,request,user_token,format=None):
-        user_token=user_token
+    def get(self,request,uid,format=None):
+        uid=uid
         res={"status":True,"message":"User found","data":{}}
-        if user_token is not None:
-            user=User.objects.filter(user_token=user_token).first()
+        if uid is not None:
+            user=User.objects.filter(uid=uid).first()
             if user is not None:
                 serializer=UserSerializer(user)
                 res.update(data=serializer.data)
