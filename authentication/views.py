@@ -101,7 +101,7 @@ class GenerateSmsOTP(APIView):
             twilio=Twilio("Your Otp Code is:"+str(otp),phone)
             smsResponse=twilio.send()
             if smsResponse==1:
-                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp,"counter":phoneNumber.counter,"delta": delta}}
+                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp,"counter":phoneNumber.counter}}
                 return Response(res)
             elif smsResponse==2:   
                 res={"status":False,"message":"Twilio Unable to send otp.","data":{}}
