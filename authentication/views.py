@@ -33,10 +33,16 @@ class PulseUserAPIView(GenericAPIView):
 
 
 class UserListAPIView(ListAPIView):
-    serializer_class=UserSerializer
-    
-    def get_queryset(self):
-        return User.objects.filter(is_active=1)
+    def list(self, request, *args, **kwargs):
+        users=User.objects.filter(is_active=1,is_superuser=False).values()
+        if users.count() > 0:
+            serializer = UserSerializer(users, many=True)
+            res={"status":True,"message":"users found","data":{"users":serializer.data}}
+        else:
+            res={"status":False,"message":"Not found","data":{}}
+        return Response(res)
+    # def get_queryset(self):
+    #     return User.objects.filter(is_active=1)
 
 class CreateDeviceAPIView(CreateAPIView):
     serializer_class=DeviceSerializer
@@ -89,16 +95,6 @@ class GenerateSmsOTP(APIView):
         phoneNumber=SmsOTP.objects.filter(phone=phone).first()
         otp = random.randint(1000, 9999)
         if phoneNumber is not None:
-            delta=datetime.now(timezone.utc)-phoneNumber.updated_at
-            delta=delta.total_seconds()/ (60 * 60)
-            delta=round(delta,1)
-            if phoneNumber.counter > 5 and delta < 1:
-                res={"status":False,"message":"Too many tries.Can try after 1 hour.","data":{"counter":phoneNumber.counter}}
-                return Response(res)
-            elif phoneNumber.counter > 5 and delta > 0:
-                phoneNumber.counter=0
-            else:
-                phoneNumber.counter+=1
             phoneNumber.otp=otp
             phoneNumber.is_verified=0
             phoneNumber.save()
@@ -133,8 +129,22 @@ class VerifySmsOTP(APIView):
         if otp is None:
             res={"status":False,"message":"Otp is required","data":{}}
             return Response(res)
-        phoneNumber=SmsOTP.objects.filter(phone=phone,otp=otp,is_verified=0).first()
+        phoneNumber=SmsOTP.objects.filter(phone=phone,is_verified=0).first()
         if phoneNumber is not None:
+            if phoneNumber.otp !=otp:
+                delta=datetime.now(timezone.utc)-phoneNumber.updated_at
+                delta=delta.total_seconds()/ (60 * 60)
+                delta=round(delta,1)
+                if phoneNumber.counter > 5 and delta < 1:
+                    res={"status":False,"message":"Too many tries.Can try after 1 hour.","data":{"counter":phoneNumber.counter}}
+                    return Response(res)
+                elif phoneNumber.counter > 5 and delta > 0:
+                    phoneNumber.counter=0
+                else:
+                    phoneNumber.counter+=1
+                phoneNumber.save()
+                res={"status":False,"message":"Invalid otp.","data":{}}
+                return Response(res)    
             phoneNumber.is_verified=1
             phoneNumber.save()
             res={"status":True,"message":"Otp verified successfully","data":{}}
