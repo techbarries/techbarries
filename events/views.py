@@ -1,3 +1,4 @@
+from datetime import datetime
 from unicodedata import name
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
@@ -27,6 +28,25 @@ class CreateEventAPIView(CreateAPIView):
 class EventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         events=Event.objects.filter(user_id=user_id).all()
+        if events.count() > 0:
+            serializer = EventSerializer(events, many=True)
+            res={"status":True,"message":"events found","data":{"events":serializer.data}}
+        else:
+            res={"status":False,"message":"Not found","data":{}}
+        return Response(res)
+
+class PastEventListAPIView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today(),event_end_time__lte=datetime.today()).all()
+        if events.count() > 0:
+            serializer = EventSerializer(events, many=True)
+            res={"status":True,"message":"events found","data":{"events":serializer.data}}
+        else:
+            res={"status":False,"message":"Not found","data":{}}
+        return Response(res)
+class UpcomingEventListAPIView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today(),event_end_time__gte=datetime.today()).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             res={"status":True,"message":"events found","data":{"events":serializer.data}}
