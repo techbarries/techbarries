@@ -16,6 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import random
 
 from authentication.twilio import Twilio
+from events.models import EventStatus
 # Create your views here.
 
 class PulseUserAPIView(GenericAPIView):
@@ -85,7 +86,31 @@ class UserByTokenView(APIView):
             user=User.objects.filter(uid=uid).first()
             if user is not None:
                 serializer=UserSerializer(user)
-                res.update(data=serializer.data)
+                userItem={}
+                userItem=serializer.data
+                eventStatus=EventStatus.objects.filter(user_id=user.id).all()
+                user_score=0
+                if eventStatus.count() > 0:
+                    for eventStatusItem in eventStatus:
+                        if eventStatusItem.hosted:
+                            user_score+=7
+                        if eventStatusItem.checked_in:
+                            user_score+=6
+                        if eventStatusItem.pinned:
+                            user_score+=5
+                        if eventStatusItem.paid:
+                            user_score+=4
+                        if eventStatusItem.guest_list:
+                            user_score+=3
+                        if eventStatusItem.invited:
+                            user_score+=2
+                        if eventStatusItem.public:
+                            user_score+=1
+                        if eventStatusItem.not_going:
+                            user_score+=0
+
+                userItem.update({"user_score":user_score})
+                res.update(data=userItem)
                 return Response(res)
         res.update(status=False,message="Not found")
         return Response(res)

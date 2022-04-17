@@ -59,3 +59,18 @@ class Event(TrackingModel):
 class EventImage(models.Model):
     event = models.ForeignKey(Event, related_name='event_images',on_delete=models.CASCADE)
     image = models.ImageField(upload_to="event/%Y/%m/%d/",blank=True)
+
+    def __str__(self):
+        return self.event.name
+
+class EventStatus(TrackingModel,models.Model):
+    event_id = models.ForeignKey(Event, related_name='event_status',on_delete=models.CASCADE)
+    user_id=models.ForeignKey(to=User,related_name="user_event_interaction",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    hosted=models.BooleanField(default=0,blank=True,null=True)
+    checked_in=models.BooleanField(default=0,blank=True,null=True)
+    pinned=models.BooleanField(default=0,blank=True,null=True)
+    paid=models.BooleanField(default=0,blank=True,null=True)
+    guest_list=models.BooleanField(default=0,blank=True,null=True)
+    invited=models.BooleanField(default=0,blank=True,null=True)
+    public=models.BooleanField(default=0,blank=True,null=True)
+    not_going=models.BooleanField(default=0,blank=True,null=True)
