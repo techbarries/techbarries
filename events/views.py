@@ -7,6 +7,8 @@ from events.models import EventImage, EventStatus, University, Venue,Event
 from rest_framework.response import Response
 from events.serializers import EventSerializer, UniversitySerializer, VenueSerializer
 from rest_framework import status
+from rest_framework.views import APIView
+
 
 # Create your views here.
 
@@ -33,6 +35,42 @@ class CreateEventAPIView(CreateAPIView):
     #     return super().create(request, *args, **kwargs)   
     # def perform_create(self, serializer):
     #     return super().perform_create(serializer)
+
+class EventStatusAPIView(APIView):
+    def get(self,request,event_id,user_id,status):
+        status_list = ["checked_in","checked_out","pinned","un_pinned"]
+        if status in status_list:
+            eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
+            if eventStatus is not None:
+                if status == "checked_in":
+                    eventStatus.checked_in=True
+                if status == "checked_out":
+                    eventStatus.checked_in=False
+                if status == "pinned":
+                    eventStatus.pinned=True
+                if status == "un_pinned":
+                    eventStatus.pinned=False
+                eventStatus.save();    
+                res={"status":True,"message":"event status updated successfully","data":{}}
+                return Response(res)
+            else:
+                if status == "checked_in":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),checked_in=True)
+                if status == "checked_out":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),checked_in=False)
+                if status == "pinned":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,pinned=True)
+                if status == "un_pinned":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),pinned=False)
+                res={"status":True,"message":"event status created successfully","data":{}}
+                return Response(res)
+        else:
+            res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
+            return Response(res)
+
+
+        
+        
 class EventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         events=Event.objects.filter(user_id=user_id).all()
