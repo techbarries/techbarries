@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from events.serializers import EventSerializer, UniversitySerializer, VenueSerializer
 from rest_framework import status
 from rest_framework.views import APIView
-
+from django.db.models import Q
 
 # Create your views here.
 
@@ -77,12 +77,12 @@ class EventListAPIView(ListAPIView):
         if user is None:
             res={"status":False,"message":"User not found","data":{}}
             return Response(res)
-        events=Event.objects.filter(user_id=user_id).all()
+        eventStatus=EventStatus.objects.filter(user_id=user_id).all()    
+        events=Event.objects.filter(Q(user_id=user_id) | Q(id__in=eventStatus)).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             events_list=[]
             for event in serializer.data:
-                eventStatus=EventStatus.objects.filter(event_id=event['id']).all()
                 lint_score=0
                 if eventStatus.count() > 0:
                     for eventStatusItem in eventStatus:
