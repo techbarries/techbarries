@@ -73,6 +73,10 @@ class EventStatusAPIView(APIView):
         
 class EventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
         events=Event.objects.filter(user_id=user_id).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
@@ -103,7 +107,7 @@ class EventListAPIView(ListAPIView):
                 events_list.append(event)
             res={"status":True,"message":"events found","data":{"events":events_list}}
         else:
-            res={"status":False,"message":"Not found","data":{}}
+            res={"status":True,"message":"event not found","data":{"events":[]}}
         return Response(res)
 
 class PastEventListAPIView(ListAPIView):
