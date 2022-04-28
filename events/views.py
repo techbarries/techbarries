@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
 from authentication.models import User
 from authentication.serializers import UserSerializer
-from events.models import EventImage, EventStatus, University, Venue,Event
+from events.models import EventImage, EventStatus, University, Venue,Event, VenueImage
 from rest_framework.response import Response
 from events.serializers import EventSerializer, UniversitySerializer, VenueSerializer
 from rest_framework import status
@@ -38,6 +38,9 @@ class CreateEventAPIView(CreateAPIView):
     #     return super().perform_create(serializer)
 
 class EventStatusAPIView(APIView):
+    """Following are possible values for the status types
+    \n"checked_in","checked_out","pinned","un_pinned"
+    """
     def get(self,request,event_id,user_id,status):
         status_list = ["checked_in","checked_out","pinned","un_pinned"]
         if status in status_list:
@@ -204,22 +207,140 @@ class CreateUniversityAPIView(CreateAPIView):
     def perform_create(self, serializer):
         return super().perform_create(serializer)
 
-class VenueListAPIView(ListAPIView):
+class CreateVenueAPIView(CreateAPIView):
     serializer_class=VenueSerializer
+    def post(self,request):
+        serializer=self.serializer_class(data=request.data)
+        res={"status":True,"message":"Venue created successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            if request.FILES.getlist('venue_images[]') is not None:
+                venue_images=request.FILES.getlist('venue_images[]')
+                for image in venue_images:
+                    venueImage=VenueImage.objects.create(venue=Venue.objects.get(id=serializer.data['id']),image=image)
+                    venueImage.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)
+# class VenueListAPIView(ListAPIView):
+#     serializer_class=VenueSerializer
     
-    def get_queryset(self):
-        return Venue.objects.all()
+#     def get_queryset(self):
+#         return Venue.objects.all()
+
+
+class VenueListAPIView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        venues=Venue.objects.filter(created_by=user_id).all()
+        if venues.count() > 0:
+            serializer = VenueSerializer(venues, many=True)
+            venue_list=[]
+            for venue in serializer.data:
+                events=Event.objects.filter(venue=venue['id']).all()
+                if events.count() > 0:
+                    serializer = EventSerializer(events, many=True)
+                    events_list=[]
+                    for event in serializer.data:
+                        # guest user's details
+                        if len(event['guests'])>0:
+                            guestUsers=[];
+                            for guest in event['guests']:
+                                user=User.objects.filter(id=guest).first()
+                                if user is not None:
+                                    serializer=UserSerializer(user)
+                                    userItem={}
+                                    userItem=serializer.data
+                                    eventStatus=EventStatus.objects.filter(user_id=user.id).all()
+                                    user_score=0
+                                    if eventStatus.count() > 0:
+                                        for eventStatusItem in eventStatus:
+                                            if eventStatusItem.hosted:
+                                                user_score+=7
+                                            if eventStatusItem.checked_in:
+                                                user_score+=6
+                                            if eventStatusItem.pinned:
+                                                user_score+=5
+                                            if eventStatusItem.paid:
+                                                user_score+=4
+                                            if eventStatusItem.guest_list:
+                                                user_score+=3
+                                            if eventStatusItem.invited:
+                                                user_score+=2
+                                            if eventStatusItem.public:
+                                                user_score+=1
+                                            if eventStatusItem.not_going:
+                                                user_score+=0
+
+                                    userItem.update({"user_score":user_score})
+                                    guestUsers.append(userItem)
+
+                            event['guests']=guestUsers
+                        lint_score=0
+                        eventStatus=EventStatus.objects.filter(event_id=event['id']).all()    
+                        if eventStatus.count() > 0:
+                            for eventStatusItem in eventStatus:
+                                if eventStatusItem.checked_in:
+                                    lint_score+=6
+                                if eventStatusItem.pinned:
+                                    lint_score+=5
+                                if eventStatusItem.paid:
+                                    lint_score+=4
+                                if eventStatusItem.guest_list:
+                                    lint_score+=3
+                                if eventStatusItem.invited:
+                                    lint_score+=2
+                        #status list for current user
+                        status_list={'checked_in':False,'pinned':False,'paid':False,'guest_list':False,'invited':False}
+                        eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        if eventStatusByUser is not None:
+                            if eventStatusByUser.checked_in:
+                                status_list['checked_in']=True
+                            if eventStatusByUser.pinned:
+                                status_list['pinned']=True
+                            if eventStatusByUser.paid:
+                                status_list['paid']=True
+                            if eventStatusByUser.guest_list:
+                                status_list['guest_list']=True
+                            if eventStatusByUser.invited:
+                                status_list['invited']=True 
+
+                        
+                        event['status_list']=status_list
+                        event['lint_score']=lint_score
+                        isLive=False
+                        if str(event['event_end_date']) == str(date.today()):
+                            current_time = datetime.now().strftime('%H:%M:%S')
+                            if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
+                                isLive=True
+                        event['is_live']=isLive
+                        events_list.append(event)
+                    venue['events']=events_list
+                    venue_list.append(venue)
+                    res={"status":True,"message":"venue found","data":{"venues":venue_list}}
+                else:
+                    venue['events']=[]
+                    venue_list.append(venue)
+                    res={"status":True,"message":"event not found","data":{"venues":venue_list}}
+        else:
+            res={"status":True,"message":"venue not found","data":{"venues":[]}}
+        return Response(res)
+
 
 class VenueAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class=VenueSerializer
     lookup_field="id"     
     queryset = Venue.objects.all()
 
-class CreateVenueAPIView(CreateAPIView):
-    serializer_class=VenueSerializer
+# class CreateVenueAPIView(CreateAPIView):
+#     serializer_class=VenueSerializer
 
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)    
+#     def perform_create(self, serializer):
+#         return super().perform_create(serializer)    
 
 
 def is_between(time, time_range):
