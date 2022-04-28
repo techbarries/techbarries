@@ -48,6 +48,29 @@ class NotificationListAPIView(ListAPIView):
             res={"status":True,"message":"notifications not found","data":{"notifications":[]}}
         return Response(res) 
 
+class NotificationMarkReadAPIView(ListAPIView):
+    def list(self, request,user_id,id=None, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        if id is not None:
+            notification=Notification.objects.filter(pk=id,user_id=user_id).first()
+            if notification is not None:
+                notification.status=True
+                notification.save()
+                res={"status":True,"message":"notification mark as read successfully","data":{}}
+            else:   
+                res={"status":True,"message":"notification not found","data":{}}
+        else:
+            notifications=Notification.objects.filter(user_id=user_id).all()
+            if notifications.count() > 0:
+                notifications=Notification.objects.filter(user_id=user_id).update(status=True)
+                res={"status":True,"message":"notifications mark as read successfully","data":{}}
+            else:
+                res={"status":True,"message":"notifications not found","data":{}}
+        return Response(res)
+
 class NotificationAPIView(ListAPIView):
     def list(self, request,*args, **kwargs):
         notifications=Notification.objects.all()
