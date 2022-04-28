@@ -4,6 +4,6 @@ from django.urls import path
 urlpatterns=[
     path('pulse-user',PulseUserAPIView.as_view(),name="pulseUser"),
     path('users',UserListAPIView.as_view(),name="users"),
-    path('user/<int:user_id>/devices',DeviceByUserView.as_view({'get': 'list',}),name="device-by-user"),
+    path('user/<int:user_id>/devices',DeviceByUserView.as_view(),name="device-by-user"),
     path('user/uid/<slug:uid>',UserByTokenView.as_view(),name="user-by-token")
 ]

@@ -47,26 +47,72 @@ class UserListAPIView(ListAPIView):
 
 class CreateDeviceAPIView(CreateAPIView):
     serializer_class=DeviceSerializer
+    def post(self,request):
+        serializer=self.serializer_class(data=request.data)
+        res={"status":True,"message":"device created successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)
+    # def perform_create(self, serializer):
+    #     return super().perform_create(serializer)
 
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
+class DeviceListAPIView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        devices=Device.objects.filter(user_id=user_id).all()
+        if devices.count() > 0:
+            serializer = DeviceSerializer(devices, many=True)
+            device_list=[]
+            for device in serializer.data:
+                device_list.append(device)
+            res={"status":True,"message":"devices found","data":{"devices":device_list}}
 
-class DeviceListAPIView(RetrieveUpdateDestroyAPIView):
-    serializer_class=DeviceSerializer
-    lookup_field="id"
-    queryset = Device.objects.all()
+        else:
+            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+        return Response(res) 
 
 class DeviceAPIView(ListAPIView):
-    serializer_class=DeviceSerializer
-    def get_queryset(self):
-            return Device.objects.all()
+    def list(self, request, *args, **kwargs):
+        devices=Device.objects.all()
+        if devices.count() > 0:
+            serializer = DeviceSerializer(devices, many=True)
+            device_list=[]
+            for device in serializer.data:
+                device_list.append(device)
+            res={"status":True,"message":"devices found","data":{"devices":device_list}}
+        else:
+            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+        return Response(res) 
             
-class DeviceByUserView(viewsets.ModelViewSet):
-    serializer_class = DeviceSerializer
-    lookup_field = 'user_id'
-    def get_queryset(self):
-        user_id = self.request.parser_context['kwargs'].get('user_id')
-        return Device.objects.all().filter(user_id=user_id)
+class DeviceByUserView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        devices=Device.objects.filter(user_id=user_id).all()
+        if devices.count() > 0:
+            serializer = DeviceSerializer(devices, many=True)
+            device_list=[]
+            for device in serializer.data:
+                device_list.append(device)
+            res={"status":True,"message":"devices found","data":{"devices":device_list}}
+
+        else:
+            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+        return Response(res) 
+
+    # serializer_class = DeviceSerializer
+    # lookup_field = 'user_id'
+    # def get_queryset(self):
+    #     user_id = self.request.parser_context['kwargs'].get('user_id')
+    #     return Device.objects.all().filter(user_id=user_id)
     # filter_backends = (DjangoFilterBackend,)
     # search_fields = ['user_id']
 
