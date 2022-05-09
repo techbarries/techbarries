@@ -35,6 +35,8 @@ class Event(TrackingModel):
     cover_photo=models.ImageField(upload_to="event_cover/%Y/%m/%d/",blank=True,null=True)
     description=models.TextField(blank=True,null=True)
     address=models.CharField(max_length=255,blank=True,null=True)
+    latitude=models.CharField(max_length=255,blank=True,null=True)
+    longitude=models.CharField(max_length=255,blank=True,null=True)
     event_address_unit=models.CharField(max_length=255,blank=True,null=True)
     event_start_date=models.DateField(blank=True,null=True)
     event_end_date=models.DateField(blank=True,null=True)
