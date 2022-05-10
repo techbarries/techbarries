@@ -16,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import random
 
 from authentication.twilio import Twilio
-from events.models import EventStatus
+from events.models import EventStatus, University
 from events.serializers import UniversitySerializer
 # Create your views here.
 
@@ -36,10 +36,18 @@ class PulseUserAPIView(GenericAPIView):
 
 class UserListAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
-        users=User.objects.filter(is_active=1,is_superuser=False).values()
+        users=User.objects.filter(is_active=1,is_superuser=False).all()
         if users.count() > 0:
             serializer = UserSerializer(users, many=True)
-            res={"status":True,"message":"users found","data":{"users":serializer.data}}
+            userList=[]
+            for user in serializer.data:
+                if user['university'] is not None:
+                    university=University.objects.filter(pk=user['university']).first()
+                    if university is not None:
+                        serializer=UniversitySerializer(university)
+                        user['university']=serializer.data
+                    userList.append(user)
+            res={"status":True,"message":"users found","data":{"users":userList}}
         else:
             res={"status":False,"message":"Not found","data":{}}
         return Response(res)
