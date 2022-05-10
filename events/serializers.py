@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from events.models import Event, EventImage, University, Venue
+from events.models import Event, EventImage, University, Venue, VenueImage
 
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,8 +15,14 @@ class EventSerializer(serializers.ModelSerializer):
 class UniversitySerializer(serializers.ModelSerializer):
     class Meta:
         model=University
-        fields='__all__'       
+        fields='__all__'
+
+class VenueImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VenueImage
+        fields=['venue','image']
 class VenueSerializer(serializers.ModelSerializer):
+    venue_images=VenueImageSerializer(many=True,read_only=True)
     class Meta:
         model=Venue
         fields='__all__'         

@@ -208,6 +208,10 @@ class CreateUniversityAPIView(CreateAPIView):
         return super().perform_create(serializer)
 
 class CreateVenueAPIView(CreateAPIView):
+    """
+    to create venue images pass
+    venue_images[] along with other params
+    """
     serializer_class=VenueSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)

@@ -17,6 +17,7 @@ import random
 
 from authentication.twilio import Twilio
 from events.models import EventStatus
+from events.serializers import UniversitySerializer
 # Create your views here.
 
 class PulseUserAPIView(GenericAPIView):
@@ -156,6 +157,9 @@ class UserByTokenView(APIView):
                             user_score+=0
 
                 userItem.update({"user_score":user_score})
+                if user.university is not None:
+                    serializer=UniversitySerializer(user.university)
+                    userItem.update({"university":serializer.data})
                 res.update(data=userItem)
                 return Response(res)
         res.update(status=False,message="Not found")
