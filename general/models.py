@@ -24,4 +24,12 @@ class Notification(TrackingModel):
 
     def __str__(self):
         return self.title
+
+class Friends(TrackingModel):
+    sent_by_user_id=models.ForeignKey(to=User,related_name="sent_by_user_id",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    sent_to_user_id=models.ForeignKey(to=User,related_name="sent_to_user_id",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    status=models.BooleanField(default=0,blank=True,null=True)
+    description = models.TextField(("description"),default=None,null=True,blank=True)
+
+
         
