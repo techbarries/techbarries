@@ -19,8 +19,35 @@ class University(TrackingModel):
         verbose_name_plural  =  "Universities"
     def __str__(self):
         return self.university_name
+class Dress(TrackingModel):
+    dress_name=models.CharField(max_length=255)
+    created_by=models.ForeignKey(to=User,related_name="dress_created_by_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.dress_name
+
+class Food(TrackingModel):
+    food_name=models.CharField(max_length=255)
+    created_by=models.ForeignKey(to=User,related_name="food_created_by_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.food_name
+
+class Music(TrackingModel):
+    music_name=models.CharField(max_length=255)
+    created_by=models.ForeignKey(to=User,related_name="music_created_by_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.music_name
+
+class Age(TrackingModel):
+    age_name=models.CharField(max_length=255)
+    created_by=models.ForeignKey(to=User,related_name="age_created_by_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.age_name        
 class Venue(TrackingModel):
     venue_name=models.CharField(max_length=255)
+    dresses=models.ManyToManyField(to=Dress,blank=True)
+    foods=models.ManyToManyField(to=Food,blank=True)
+    musics=models.ManyToManyField(to=Music,blank=True)
+    ages=models.ManyToManyField(to=Age,blank=True)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     def __str__(self):
         return self.venue_name
@@ -76,3 +103,4 @@ class EventStatus(TrackingModel,models.Model):
     invited=models.BooleanField(default=0,blank=True,null=True)
     public=models.BooleanField(default=0,blank=True,null=True)
     not_going=models.BooleanField(default=0,blank=True,null=True)
+

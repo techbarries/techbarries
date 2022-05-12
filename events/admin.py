@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from events.models import Event, EventImage, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, Food, Music, University, Venue, VenueImage
 
 # Register your models here.
 class VenueImageInline(admin.TabularInline):
@@ -16,3 +16,7 @@ class EventAdmin(admin.ModelAdmin):
 admin.site.register(University)
 admin.site.register(Venue, VenueAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(Dress)
+admin.site.register(Food)
+admin.site.register(Music)
+admin.site.register(Age)
