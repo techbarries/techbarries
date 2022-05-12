@@ -165,6 +165,97 @@ class EventListAPIView(ListAPIView):
             res={"status":True,"message":"event not found","data":{"events":[]}}
         return Response(res)
 
+class EventNearMeListAPIView(ListAPIView):
+    def list(self, request,user_id,latitude,longitude, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        latitude = latitude
+        longitude = longitude 
+        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE access_type='PUBLIC' group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        events=Event.objects.raw(query)
+        if len(events)> 0:
+            serializer = EventSerializer(events, many=True)
+            events_list=[]
+            for event in serializer.data:
+                # guest user's details
+                if len(event['guests'])>0:
+                    guestUsers=[];
+                    for guest in event['guests']:
+                        user=User.objects.filter(id=guest).first()
+                        if user is not None:
+                            serializer=UserSerializer(user)
+                            userItem={}
+                            userItem=serializer.data
+                            eventStatus=EventStatus.objects.filter(user_id=user.id).all()
+                            user_score=0
+                            if eventStatus.count() > 0:
+                                for eventStatusItem in eventStatus:
+                                    if eventStatusItem.hosted:
+                                        user_score+=7
+                                    if eventStatusItem.checked_in:
+                                        user_score+=6
+                                    if eventStatusItem.pinned:
+                                        user_score+=5
+                                    if eventStatusItem.paid:
+                                        user_score+=4
+                                    if eventStatusItem.guest_list:
+                                        user_score+=3
+                                    if eventStatusItem.invited:
+                                        user_score+=2
+                                    if eventStatusItem.public:
+                                        user_score+=1
+                                    if eventStatusItem.not_going:
+                                        user_score+=0
+
+                            userItem.update({"user_score":user_score})
+                            guestUsers.append(userItem)
+
+                    event['guests']=guestUsers
+                lint_score=0
+                eventStatus=EventStatus.objects.filter(event_id=event['id']).all()    
+                if eventStatus.count() > 0:
+                    for eventStatusItem in eventStatus:
+                        if eventStatusItem.checked_in:
+                            lint_score+=6
+                        if eventStatusItem.pinned:
+                            lint_score+=5
+                        if eventStatusItem.paid:
+                            lint_score+=4
+                        if eventStatusItem.guest_list:
+                            lint_score+=3
+                        if eventStatusItem.invited:
+                            lint_score+=2
+                #status list for current user
+                status_list={'checked_in':False,'pinned':False,'paid':False,'guest_list':False,'invited':False}
+                eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                if eventStatusByUser is not None:
+                    if eventStatusByUser.checked_in:
+                        status_list['checked_in']=True
+                    if eventStatusByUser.pinned:
+                        status_list['pinned']=True
+                    if eventStatusByUser.paid:
+                        status_list['paid']=True
+                    if eventStatusByUser.guest_list:
+                        status_list['guest_list']=True
+                    if eventStatusByUser.invited:
+                        status_list['invited']=True 
+
+                
+                event['status_list']=status_list
+                event['lint_score']=lint_score
+                isLive=False
+                if str(event['event_end_date']) == str(date.today()):
+                    current_time = datetime.now().strftime('%H:%M:%S')
+                    if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
+                        isLive=True
+                event['is_live']=isLive
+                events_list.append(event)
+            res={"status":True,"message":"events found","data":{"events":events_list}}
+        else:
+            res={"status":True,"message":"event not found","data":{"events":[]}}
+        return Response(res)
 class PastEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today()).all()
