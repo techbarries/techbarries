@@ -41,12 +41,12 @@ class UserListAPIView(ListAPIView):
             serializer = UserSerializer(users, many=True)
             userList=[]
             for user in serializer.data:
-                if user['university'] is not None:
-                    university=University.objects.filter(pk=user['university']).first()
-                    if university is not None:
-                        serializer=UniversitySerializer(university)
-                        user['university']=serializer.data
-                    userList.append(user)
+                # if user['university'] is not None:
+                #     university=University.objects.filter(pk=user['university']).first()
+                #     if university is not None:
+                #         serializer=UniversitySerializer(university)
+                #         user['university']=serializer.data
+                userList.append(user)
             res={"status":True,"message":"users found","data":{"users":userList}}
         else:
             res={"status":False,"message":"Not found","data":{}}
@@ -165,9 +165,9 @@ class UserByTokenView(APIView):
                             user_score+=0
 
                 userItem.update({"user_score":user_score})
-                if user.university is not None:
-                    serializer=UniversitySerializer(user.university)
-                    userItem.update({"university":serializer.data})
+                # if user.university is not None:
+                #     serializer=UniversitySerializer(user.university)
+                #     userItem.update({"university":serializer.data})
                 res.update(data=userItem)
                 return Response(res)
         res.update(status=False,message="Not found")
