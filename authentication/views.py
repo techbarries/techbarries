@@ -32,6 +32,21 @@ class PulseUserAPIView(GenericAPIView):
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
         # return response.Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    def put(self,request):
+        user=User.objects.filter(pk=request.data['id']).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        serializer=PulseUserSerializer(user,data=request.data)  
+        res={"status":True,"message":"User updated successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)
+        print(request.data['id'])
+           
 
 
 class UserListAPIView(ListAPIView):
