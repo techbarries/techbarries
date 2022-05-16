@@ -1,4 +1,4 @@
-from django.shortcuts import render
+import ast
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView,ListAPIView
@@ -99,6 +99,16 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 return Response(res)
             serializer.save()
             res.update(data=serializer.data)
+            # 
+            user=User.objects.filter(pk=request.data['sent_by_user_id']).first()
+            if user is not None:
+                serializer_user=UserSerializer(user)
+                desc="@"+serializer_user.data['first_name']+" has added you as a friend. Click to confirm"
+                details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"FRIEND_REQUEST","id":serializer.data['id'],"desc":""}
+                notification=Notification.objects.create(title="You got friend request invitation!",description=desc,redirect_to="FRIEND_PROFILE_PAGE",details=details,user_id=User.objects.get(id=request.data['sent_to_user_id']))
+                friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
+                friendRequest.notification=notification
+                friendRequest.save()
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
@@ -214,6 +224,16 @@ class FriendRequestStatusAPIView(ListAPIView):
                 res={"status":False,"message":"friendRequest already accepted","data":{}}
                 return Response(res)
             friendRequest.status=True
+            # 
+            if friendRequest.notification is not None:
+                notification=Notification.objects.filter(pk=friendRequest.notification.id).first()
+                if notification is not None:
+                    details=notification.details
+                    if details:
+                        details=ast.literal_eval(details)
+                        details.update({"desc":"You have accepted friend request"})
+                    notification.details=details
+                    notification.save()
             friendRequest.save()
             res={"status":True,"message":"friendRequest accepted successfully","data":{}}
         elif status=='decline':

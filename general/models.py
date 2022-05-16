@@ -30,6 +30,7 @@ class Friends(TrackingModel):
     sent_to_user_id=models.ForeignKey(to=User,related_name="sent_to_user_id",blank=True,null=True,default=None,on_delete=models.CASCADE)
     status=models.BooleanField(default=0,blank=True,null=True)
     description = models.TextField(("description"),default=None,null=True,blank=True)
+    notification=models.ForeignKey(to=Notification,related_name="friend_notification",blank=True,null=True,default=None,on_delete=models.CASCADE)
 
 
         

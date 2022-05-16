@@ -31,6 +31,25 @@ class CreateEventAPIView(CreateAPIView):
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
+    def put(self,request):
+        event=Event.objects.filter(pk=request.data['id']).first()
+        if event is None:
+            res={"status":False,"message":"Event not found","data":{}}
+            return Response(res)
+        serializer=self.serializer_class(event,data=request.data)
+        res={"status":True,"message":"Event updated successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            if request.FILES.getlist('event_images[]') is not None:
+                event_images=request.FILES.getlist('event_images[]')
+                for image in event_images:
+                    eventImage=EventImage.objects.create(event=Event.objects.get(id=serializer.data['id']),image=image)
+                    eventImage.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)        
+        
     # serializer_class=EventSerializer
     # def create(self, request, *args, **kwargs):
     #     return super().create(request, *args, **kwargs)   

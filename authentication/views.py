@@ -44,9 +44,7 @@ class PulseUserAPIView(GenericAPIView):
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
-        return Response(res,status=status.HTTP_200_OK)
-        print(request.data['id'])
-           
+        return Response(res,status=status.HTTP_200_OK)           
 
 
 class UserListAPIView(ListAPIView):
