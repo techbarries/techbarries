@@ -347,13 +347,16 @@ class CreateVenueAPIView(CreateAPIView):
 class VenueListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         return venueCommon(self, request,user_id, *args, **kwargs)    
-        
+
+class VenuePopularListAPIView(ListAPIView):
+    def list(self, request,user_id, *args, **kwargs):
+        return venueCommon(self, request,user_id,popular=True, *args, **kwargs)         
 class VenueNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
         return venueCommon(self, request,user_id,latitude,longitude, *args, **kwargs)
 
 
-def venueCommon(self, request,user_id,latitude=None,longitude=None, *args, **kwargs):
+def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None, *args, **kwargs):
     user=User.objects.filter(id=user_id).first()
     if user is None:
         res={"status":False,"message":"User not found","data":{}}
@@ -365,7 +368,10 @@ def venueCommon(self, request,user_id,latitude=None,longitude=None, *args, **kwa
         query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         venues=Venue.objects.raw(query)
         venueCount=len(venues)
-    else:
+    elif popular:
+        venues=Venue.objects.all()
+        venueCount=venues.count()
+    else:    
         venues=Venue.objects.filter(created_by=user_id).all()
         venueCount=venues.count()
     if venueCount > 0:

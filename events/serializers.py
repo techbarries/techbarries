@@ -43,8 +43,13 @@ class VenueSerializer(serializers.ModelSerializer):
     foods=FoodSerializer(many=True,read_only=True)
     musics=MusicSerializer(many=True,read_only=True)
     ages=AgeSerializer(many=True,read_only=True)
+    event_count=serializers.SerializerMethodField()
     class Meta:
         model=Venue
         fields='__all__'
+
+    def get_event_count(self,obj):
+        eventStatus=Event.objects.filter(venue=obj.id)
+        return eventStatus.count()    
 
                  
