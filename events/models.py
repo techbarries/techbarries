@@ -44,10 +44,14 @@ class Age(TrackingModel):
         return self.age_name        
 class Venue(TrackingModel):
     venue_name=models.CharField(max_length=255)
+    address=models.CharField(max_length=255,blank=True,null=True)
+    latitude=models.CharField(max_length=255,blank=True,null=True)
+    longitude=models.CharField(max_length=255,blank=True,null=True)
     dresses=models.ManyToManyField(to=Dress,blank=True)
     foods=models.ManyToManyField(to=Food,blank=True)
     musics=models.ManyToManyField(to=Music,blank=True)
     ages=models.ManyToManyField(to=Age,blank=True)
+    description=models.TextField(max_length=1000,blank=True,null=True)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     def __str__(self):
         return self.venue_name
