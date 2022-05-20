@@ -377,7 +377,12 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
     if venueCount > 0:
         serializer = VenueSerializer(venues, many=True)
         venue_list=[]
-        for venue in serializer.data:
+        if popular:
+            venueDataList=sorted(serializer.data,key=lambda x:x['event_count'],reverse=True)
+        else:
+            venueDataList=serializer.data
+
+        for venue in venueDataList:
             events=Event.objects.filter(venue=venue['id']).all()
             if events.count() > 0:
                 serializer = EventSerializer(events, many=True)
