@@ -11,6 +11,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.db.models import Q
 
+from general.models import Notification
+
 # Create your views here.
 
 class CreateEventAPIView(CreateAPIView):
@@ -28,6 +30,22 @@ class CreateEventAPIView(CreateAPIView):
             res.update(data=serializer.data)
             # create event status
             EventStatus.objects.create(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=serializer.data['user_id']) ,hosted=True)
+            # invite guests
+            guests=serializer.data['guests']
+            date=serializer.data['event_start_date']
+            if date:
+                cDate=datetime.strptime(date,'%Y-%m-%d')
+                date=cDate.strftime('%A, %B %d, %Y')
+            for guest in guests:
+                EventStatus.objects.create(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=guest) ,invited=True)
+                #notification
+                user=User.objects.filter(pk=serializer.data['user_id']).first()
+                if user is not None:
+                    serializer_user=UserSerializer(user)
+                    desc="You have been invited to the event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
+                    details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":""}
+                    Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest))
+
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
