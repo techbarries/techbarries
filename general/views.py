@@ -237,11 +237,21 @@ class FriendRequestStatusAPIView(ListAPIView):
             friendRequest.save()
             res={"status":True,"message":"friendRequest accepted successfully","data":{}}
         elif status=='decline':
+            # 
+            if friendRequest.notification is not None:
+                notification=Notification.objects.filter(pk=friendRequest.notification.id).first()
+                if notification is not None:
+                    details=notification.details
+                    if details:
+                        details=ast.literal_eval(details)
+                        details.update({"desc":"You have declined friend request"})
+                    notification.details=details
+                    notification.save()
             friendRequest.delete()
             res={"status":True,"message":"friendRequest declined successfully","data":{}}
         elif status=='un_friend':
             friendRequest.delete()
             res={"status":True,"message":"friendRequest un_friend successfully","data":{}}    
         else:
-            res={"status":False,"message":"provice valid status,'accept/decline/un_friend'","data":{}}
+            res={"status":False,"message":"provide valid status,'accept/decline/un_friend'","data":{}}
         return Response(res)

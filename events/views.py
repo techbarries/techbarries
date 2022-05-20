@@ -76,7 +76,7 @@ class CreateEventAPIView(CreateAPIView):
 
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"checked_in","checked_out","pinned","un_pinned"
+    \n"checked_in","checked_out","pinned","un_pinned,leave"
     """
     def get(self,request,event_id,user_id,status):
         status_list = ["checked_in","checked_out","pinned","un_pinned"]
@@ -105,6 +105,14 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),pinned=False)
                 res={"status":True,"message":"event status created successfully","data":{}}
                 return Response(res)
+        elif status=='leave':
+            eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
+            if eventStatus is not None:
+                eventStatus.delete()
+                res={"status":True,"message":"Left from event successfully","data":{}}
+            else:
+                res={"status":False,"message":"Event status not found.","data":{}}
+            return Response(res)
         else:
             res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
             return Response(res)
