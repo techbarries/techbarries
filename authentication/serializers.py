@@ -9,7 +9,7 @@ from events.serializers import UniversitySerializer
 class PulseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
-        fields=('id','uid','user_token','first_name','last_name','profile_picture_url','profile_picture_image','is_active','phone_number','country','university','email')
+        fields=('id','uid','user_token','username','first_name','last_name','profile_picture_url','profile_picture_image','is_active','phone_number','date_of_birth','job_title','degree_title','country','university','email','profile_access_type')
     def create(self,validated_data):
         return User.objects.create_user(**validated_data)
           
@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
     event_count=serializers.SerializerMethodField()
     class Meta:
         model=User
-        fields=('id','uid','user_token','first_name','last_name','profile_picture_url','profile_picture_image','is_active','phone_number','country','university','email','event_count')
+        fields=('id','uid','user_token','username','first_name','last_name','profile_picture_url','profile_picture_image','is_active','phone_number','date_of_birth','job_title','degree_title','country','university','email','event_count','profile_access_type')
     def get_event_count(self,obj):
         eventStatus=EventStatus.objects.filter(user_id=obj.id,hosted=True)
         return eventStatus.count()
