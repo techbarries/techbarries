@@ -73,6 +73,16 @@ class CreateEventAPIView(CreateAPIView):
     #     return super().create(request, *args, **kwargs)   
     # def perform_create(self, serializer):
     #     return super().perform_create(serializer)
+class EventImageDeleteAPIView(APIView):
+    def delete(self,request,id, *args, **kwargs):
+         image=EventImage.objects.filter(id=id).first()
+         if image is not None:
+            image.delete()
+            res={"status":True,"message":"Event Image deleted successfully","data":{}}
+         else:
+            res={"status":False,"message":"Event Image not found","data":{}}
+         return Response(res,status=status.HTTP_200_OK) 
+        
 
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
