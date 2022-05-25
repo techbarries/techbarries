@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from events.models import Age, Dress, Event, EventImage, Food, Music, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, EventStatus, Food, Music, University, Venue, VenueImage
 
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,9 +8,13 @@ class EventImageSerializer(serializers.ModelSerializer):
         
 class EventSerializer(serializers.ModelSerializer):
     event_images=EventImageSerializer(many=True,read_only=True)
+    like_count=serializers.SerializerMethodField()
     class Meta:
         model=Event
         fields='__all__'
+    def get_like_count(self,obj):
+        eventLikeStatus=EventStatus.objects.filter(event_id=obj.id,liked=True)
+        return eventLikeStatus.count()    
 
 class UniversitySerializer(serializers.ModelSerializer):
     class Meta:

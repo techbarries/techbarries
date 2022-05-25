@@ -76,10 +76,10 @@ class CreateEventAPIView(CreateAPIView):
 
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"checked_in","checked_out","pinned","un_pinned,leave"
+    \n"checked_in","checked_out","pinned","un_pinned","liked","un_liked",leave"
     """
     def get(self,request,event_id,user_id,status):
-        status_list = ["checked_in","checked_out","pinned","un_pinned"]
+        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked"]
         if status in status_list:
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
             if eventStatus is not None:
@@ -91,6 +91,10 @@ class EventStatusAPIView(APIView):
                     eventStatus.pinned=True
                 if status == "un_pinned":
                     eventStatus.pinned=False
+                if status == "liked":
+                    eventStatus.liked=True
+                if status == "un_liked":
+                    eventStatus.liked=False                    
                 eventStatus.save();    
                 res={"status":True,"message":"event status updated successfully","data":{}}
                 return Response(res)
@@ -103,6 +107,10 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,pinned=True)
                 if status == "un_pinned":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),pinned=False)
+                if status == "liked":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,liked=True)
+                if status == "un_liked":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),liked=False)    
                 res={"status":True,"message":"event status created successfully","data":{}}
                 return Response(res)
         elif status=='leave':
@@ -181,13 +189,15 @@ class EventListAPIView(ListAPIView):
                         if eventStatusItem.invited:
                             lint_score+=2
                 #status list for current user
-                status_list={'checked_in':False,'pinned':False,'paid':False,'guest_list':False,'invited':False}
+                status_list={'checked_in':False,'pinned':False,'liked':False,'paid':False,'guest_list':False,'invited':False}
                 eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
                 if eventStatusByUser is not None:
                     if eventStatusByUser.checked_in:
                         status_list['checked_in']=True
                     if eventStatusByUser.pinned:
                         status_list['pinned']=True
+                    if eventStatusByUser.liked:
+                        status_list['liked']=True    
                     if eventStatusByUser.paid:
                         status_list['paid']=True
                     if eventStatusByUser.guest_list:
@@ -273,13 +283,15 @@ class EventNearMeListAPIView(ListAPIView):
                         if eventStatusItem.invited:
                             lint_score+=2
                 #status list for current user
-                status_list={'checked_in':False,'pinned':False,'paid':False,'guest_list':False,'invited':False}
+                status_list={'checked_in':False,'pinned':False,'liked':False,'paid':False,'guest_list':False,'invited':False}
                 eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
                 if eventStatusByUser is not None:
                     if eventStatusByUser.checked_in:
                         status_list['checked_in']=True
                     if eventStatusByUser.pinned:
                         status_list['pinned']=True
+                    if eventStatusByUser.liked:
+                        status_list['liked']=True
                     if eventStatusByUser.paid:
                         status_list['paid']=True
                     if eventStatusByUser.guest_list:
@@ -463,13 +475,15 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                             if eventStatusItem.invited:
                                 lint_score+=2
                     #status list for current user
-                    status_list={'checked_in':False,'pinned':False,'paid':False,'guest_list':False,'invited':False}
+                    status_list={'checked_in':False,'pinned':False,'liked':False,'paid':False,'guest_list':False,'invited':False}
                     eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
                     if eventStatusByUser is not None:
                         if eventStatusByUser.checked_in:
                             status_list['checked_in']=True
                         if eventStatusByUser.pinned:
                             status_list['pinned']=True
+                        if eventStatusByUser.liked:
+                            status_list['liked']=True    
                         if eventStatusByUser.paid:
                             status_list['paid']=True
                         if eventStatusByUser.guest_list:

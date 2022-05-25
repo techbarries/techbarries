@@ -105,6 +105,7 @@ class EventStatus(TrackingModel,models.Model):
     paid=models.BooleanField(default=0,blank=True,null=True)
     guest_list=models.BooleanField(default=0,blank=True,null=True)
     invited=models.BooleanField(default=0,blank=True,null=True)
+    liked=models.BooleanField(default=0,blank=True,null=True)
     public=models.BooleanField(default=0,blank=True,null=True)
     not_going=models.BooleanField(default=0,blank=True,null=True)
 
