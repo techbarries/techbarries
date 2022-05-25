@@ -5,7 +5,7 @@ from events.models import Age, Dress, Event, EventImage, EventStatus, Food, Musi
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventImage
-        fields=['event','image']
+        fields=['id','event','image']
 class UserUniversitySerializer(serializers.ModelSerializer):
     class Meta:
         model=University
