@@ -33,6 +33,11 @@ class PulseUserAPIView(GenericAPIView):
         return Response(res,status=status.HTTP_200_OK)
         # return response.Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     def put(self,request):
+        try:
+            request.data['id']
+        except KeyError:
+            res={"status":False,"message":"Id missing","data":{}}
+            return Response(res,status=status.HTTP_200_OK) 
         user=User.objects.filter(pk=request.data['id']).first()
         if user is None:
             res={"status":False,"message":"User not found","data":{}}

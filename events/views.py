@@ -50,6 +50,11 @@ class CreateEventAPIView(CreateAPIView):
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
     def put(self,request):
+        try:
+            request.data['id']
+        except KeyError:
+            res={"status":False,"message":"Id missing","data":{}}
+            return Response(res,status=status.HTTP_200_OK)  
         event=Event.objects.filter(pk=request.data['id']).first()
         if event is None:
             res={"status":False,"message":"Event not found","data":{}}
