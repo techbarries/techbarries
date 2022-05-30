@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from events.models import Age, Dress, Event, EventImage, Food, Music, University, Venue, VenueImage
+from django.db import models
+from django.forms import SelectMultiple
+
+from events.models import Age, Dress, Event, EventImage, Food, MenuImage, Music, University, Venue, VenueImage
 
 # Register your models here.
 class VenueImageInline(admin.TabularInline):
@@ -14,10 +17,23 @@ class VenueImageInline(admin.TabularInline):
         else:
             return '(No image)'
 
-    image_preview.short_description = 'Preview' 
+    image_preview.short_description = 'Preview'
+class VenueMenuImageInline(admin.TabularInline):
+    model = MenuImage
+    readonly_fields = ('image_preview',)
+    extra = 3
+    def image_preview(self, obj):
+        # ex. the name of column is "image"
+        if obj.image:
+            return mark_safe('<img src="{0}" width="50" style="object-fit:contain" />'.format(obj.image.url))
+        else:
+            return '(No image)'
+
+    image_preview.short_description = 'Preview'     
 class VenueAdmin(admin.ModelAdmin):
-    inlines = [ VenueImageInline, ]
+    inlines = [ VenueMenuImageInline,VenueImageInline, ]
     exclude=('address','latitude','longitude')
+    formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px'})}, }
     def save_model(self, request, obj, form, change):
         obj.address = obj.location.place
         obj.latitude = obj.location.latitude

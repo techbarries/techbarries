@@ -13,6 +13,7 @@ class University(TrackingModel):
     country=models.CharField(max_length=255,blank=True)
     university_picture=models.ImageField(upload_to="university/%Y/%m/%d/",blank=True,)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_uni",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    status=models.BooleanField(default=1,null=True,blank=True)
     class  Meta:  #new
         verbose_name_plural  =  "Universities"
     def __str__(self):
@@ -49,11 +50,19 @@ class Venue(TrackingModel):
     foods=models.ManyToManyField(to=Food,blank=True)
     musics=models.ManyToManyField(to=Music,blank=True)
     ages=models.ManyToManyField(to=Age,blank=True)
+    email=models.CharField(max_length=255,blank=True,null=True)
+    phone=models.CharField(max_length=255,blank=True,null=True)
     description=models.TextField(max_length=1000,blank=True,null=True)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    status=models.BooleanField(default=1,null=True,blank=True)
     location = PlacesField(null=True,blank=True)
     def __str__(self):
         return self.venue_name
+        
+class MenuImage(models.Model):
+    venue = models.ForeignKey(Venue, related_name='venue_menu_images',on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="menu/%Y/%m/%d-%h:%i/",blank=True) 
+
 class VenueImage(models.Model):
     venue = models.ForeignKey(Venue, related_name='venue_images',on_delete=models.CASCADE)
     image = models.ImageField(upload_to="venue/%Y/%m/%d/",blank=True)
@@ -82,6 +91,7 @@ class Event(TrackingModel):
     cover_fee=models.PositiveIntegerField(default=0,null=True)
     bottle_service_fee=models.PositiveIntegerField(default=0,null=True)
     boost_enabled=models.BooleanField(default=0,blank=True,null=True)
+    status=models.BooleanField(default=1,null=True,blank=True)
     user_id=models.ForeignKey(to=User,related_name="user_created_event",blank=True,null=True,default=None,on_delete=models.CASCADE)
     created_by=models.ForeignKey(to=User,related_name="created_by_event_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
 

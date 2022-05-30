@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from authentication.models import User
-from events.models import Age, Dress, Event, EventImage, EventStatus, Food, Music, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, University, Venue, VenueImage
 
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,7 +41,12 @@ class UniversitySerializer(serializers.ModelSerializer):
 class VenueImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = VenueImage
-        fields=['venue','image']
+        fields=['id','venue','image']
+        
+class VenueMenuImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuImage
+        fields=['id','venue','image']        
 class DressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dress
@@ -60,6 +65,7 @@ class AgeSerializer(serializers.ModelSerializer):
         fields=['pk','age_name']                        
 class VenueSerializer(serializers.ModelSerializer):
     venue_images=VenueImageSerializer(many=True,read_only=True)
+    venue_menu_images=VenueMenuImageSerializer(many=True,read_only=True)
     dresses=DressSerializer(many=True,read_only=True)
     foods=FoodSerializer(many=True,read_only=True)
     musics=MusicSerializer(many=True,read_only=True)

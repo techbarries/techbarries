@@ -150,7 +150,7 @@ class EventListAPIView(ListAPIView):
             res={"status":False,"message":"User not found","data":{}}
             return Response(res)
         eventStatusIds=EventStatus.objects.values_list('event_id',flat=True).filter(user_id=user_id).all()    
-        events=Event.objects.filter(Q(user_id=user_id) | Q(pk__in=set(eventStatusIds))).all()
+        events=Event.objects.filter((Q(user_id=user_id) | Q(pk__in=set(eventStatusIds))),status=True).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             events_list=[]
@@ -243,7 +243,7 @@ class EventNearMeListAPIView(ListAPIView):
             return Response(res)
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE status=1 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         events=Event.objects.raw(query)
         if len(events)> 0:
             serializer = EventSerializer(events, many=True)
@@ -330,7 +330,7 @@ class EventNearMeListAPIView(ListAPIView):
         return Response(res)
 class PastEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
-        events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today()).all()
+        events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today(),status=True).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             res={"status":True,"message":"events found","data":{"events":serializer.data}}
@@ -339,7 +339,7 @@ class PastEventListAPIView(ListAPIView):
         return Response(res)
 class UpcomingEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
-        events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today()).all()
+        events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today(),status=True).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             res={"status":True,"message":"events found","data":{"events":serializer.data}}
@@ -418,14 +418,14 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
     if latitude is not None and longitude is not None:
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where status=1  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         venues=Venue.objects.raw(query)
         venueCount=len(venues)
     elif popular:
-        venues=Venue.objects.all()
+        venues=Venue.objects.filter(status=True).all()
         venueCount=venues.count()
     else:    
-        venues=Venue.objects.filter(created_by=user_id).all()
+        venues=Venue.objects.filter(created_by=user_id,status=True).all()
         venueCount=venues.count()
     if venueCount > 0:
         serializer = VenueSerializer(venues, many=True)
@@ -436,7 +436,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
             venueDataList=serializer.data
 
         for venue in venueDataList:
-            events=Event.objects.filter(venue=venue['id']).all()
+            events=Event.objects.filter(venue=venue['id'],status=True).all()
             if events.count() > 0:
                 serializer = EventSerializer(events, many=True)
                 events_list=[]
