@@ -7,3 +7,4 @@ django-storages
 boto3
 django-filter
 twilio
+dj-places

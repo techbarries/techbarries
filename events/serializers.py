@@ -65,12 +65,23 @@ class VenueSerializer(serializers.ModelSerializer):
     musics=MusicSerializer(many=True,read_only=True)
     ages=AgeSerializer(many=True,read_only=True)
     event_count=serializers.SerializerMethodField()
+    address=serializers.SerializerMethodField()
+    latitude=serializers.SerializerMethodField()
+    longitude=serializers.SerializerMethodField()
     class Meta:
         model=Venue
         fields='__all__'
 
     def get_event_count(self,obj):
         eventStatus=Event.objects.filter(venue=obj.id)
-        return eventStatus.count()    
-
+        return eventStatus.count()
+    def get_address(self,obj):
+        if obj.location is not None:
+            return obj.location.place
+    def get_latitude(self,obj):
+        if obj.location is not None:
+            return obj.location.latitude        
+    def get_longitude(self,obj):
+        if obj.location is not None:
+            return obj.location.longitude                 
                  

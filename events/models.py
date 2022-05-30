@@ -1,11 +1,9 @@
 import imp
-from operator import mod
-from os import access
-from pyexpat import model
-from unicodedata import name
 from django.db import models
 from helpers.models import TrackingModel
 from authentication.models import User
+from places.fields import PlacesField
+
 # Create your models here.
 
 class University(TrackingModel):
@@ -53,6 +51,7 @@ class Venue(TrackingModel):
     ages=models.ManyToManyField(to=Age,blank=True)
     description=models.TextField(max_length=1000,blank=True,null=True)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    location = PlacesField(null=True,blank=True)
     def __str__(self):
         return self.venue_name
 class VenueImage(models.Model):

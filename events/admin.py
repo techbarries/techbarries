@@ -17,6 +17,12 @@ class VenueImageInline(admin.TabularInline):
     image_preview.short_description = 'Preview' 
 class VenueAdmin(admin.ModelAdmin):
     inlines = [ VenueImageInline, ]
+    exclude=('address','latitude','longitude')
+    def save_model(self, request, obj, form, change):
+        obj.address = obj.location.place
+        obj.latitude = obj.location.latitude
+        obj.longitude = obj.location.longitude
+        super().save_model(request, obj, form, change)
 class EventImageInline(admin.TabularInline):
     model = EventImage
     readonly_fields = ('image_preview',)
