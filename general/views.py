@@ -5,6 +5,7 @@ from rest_framework.generics import CreateAPIView,ListAPIView
 from authentication.models import User
 from authentication.serializers import UserSerializer
 from events.models import EventStatus
+from fcm import Fcm
 from general.models import Friends, Notification
 from general.serializers import FriendsSerializer, NotificationSerializer
 from django.db.models import Q
@@ -109,6 +110,10 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
                 friendRequest.notification=notification
                 friendRequest.save()
+                sentToUser=User.objects.get(id=request.data['sent_to_user_id'])
+                if sentToUser is not None:
+                    fcm=Fcm()
+                    fcm.send(sentToUser.user_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)

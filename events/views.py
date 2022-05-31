@@ -10,6 +10,7 @@ from events.serializers import EventSerializer, UniversitySerializer, VenueSeria
 from rest_framework import status
 from rest_framework.views import APIView
 from django.db.models import Q
+from fcm import Fcm
 
 from general.models import Notification
 
@@ -45,7 +46,11 @@ class CreateEventAPIView(CreateAPIView):
                     desc="You have been invited to the event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
                     details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":""}
                     Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest))
-
+                    sentToUser=User.objects.get(id=guest)
+                    if sentToUser is not None and len(sentToUser.user_token)>0:
+                        fcm=Fcm()
+                        fcm.send(sentToUser.user_token,"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
+    
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
