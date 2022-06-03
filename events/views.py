@@ -19,6 +19,11 @@ from general.models import Notification
 class CreateEventAPIView(CreateAPIView):
     serializer_class=EventSerializer
     def post(self,request):
+        try:
+            request.data['user_id']
+        except KeyError:
+            res={"status":False,"message":"user_id missing","data":{}}
+            return Response(res,status=status.HTTP_200_OK)        
         serializer=self.serializer_class(data=request.data)
         res={"status":True,"message":"Event created successfully","data":{}}
         if serializer.is_valid():
