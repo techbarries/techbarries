@@ -101,11 +101,18 @@ class EventImageDeleteAPIView(APIView):
 
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"checked_in","checked_out","pinned","un_pinned","liked","un_liked",leave"
+    \n"checked_in","checked_out","pinned","un_pinned","joined","going","not_going","liked","un_liked",leave"
     """
     def get(self,request,event_id,user_id,status):
-        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked"]
+        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","joined","going","not_going"]
         if status in status_list:
+            if status=='joined':
+                event=Event.objects.filter(id=event_id).first()
+                if event is not None:
+                    serializer=EventSerializer(event)
+                    if serializer.data['joined_count']>=serializer.data['open_guests_list']:
+                        res={"status":False,"message":"Can't join.Open guests list full","data":{}}
+                        return Response(res)
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
             if eventStatus is not None:
                 if status == "checked_in":
@@ -119,7 +126,16 @@ class EventStatusAPIView(APIView):
                 if status == "liked":
                     eventStatus.liked=True
                 if status == "un_liked":
-                    eventStatus.liked=False                    
+                    eventStatus.liked=False 
+                if status == "joined":
+                    eventStatus.joined=True   
+                if status == "going":
+                    eventStatus.going=True 
+                    eventStatus.not_going=False
+                if status == "not_going":
+                    eventStatus.going=False 
+                    eventStatus.joined=False
+                    eventStatus.not_going=True                                                                              
                 eventStatus.save();    
                 res={"status":True,"message":"event status updated successfully","data":{}}
                 return Response(res)
@@ -134,6 +150,12 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),pinned=False)
                 if status == "liked":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,liked=True)
+                if status == "joined":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,joined=True)
+                if status == "going":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,going=True,not_going=False)
+                if status == "not_going":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,going=False,joined=False,not_going=True)            
                 if status == "un_liked":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),liked=False)    
                 res={"status":True,"message":"event status created successfully","data":{}}
@@ -214,7 +236,7 @@ class EventListAPIView(ListAPIView):
                         if eventStatusItem.invited:
                             lint_score+=2
                 #status list for current user
-                status_list={'checked_in':False,'pinned':False,'liked':False,'paid':False,'guest_list':False,'invited':False}
+                status_list={'checked_in':False,'pinned':False,'liked':False,'joined':False,'going':False,'not_going':False,'paid':False,'guest_list':False,'invited':False}
                 eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
                 if eventStatusByUser is not None:
                     if eventStatusByUser.checked_in:
@@ -223,6 +245,12 @@ class EventListAPIView(ListAPIView):
                         status_list['pinned']=True
                     if eventStatusByUser.liked:
                         status_list['liked']=True    
+                    if eventStatusByUser.joined:
+                        status_list['joined']=True
+                    if eventStatusByUser.going:
+                        status_list['going']=True
+                    if eventStatusByUser.not_going:
+                        status_list['not_going']=True                        
                     if eventStatusByUser.paid:
                         status_list['paid']=True
                     if eventStatusByUser.guest_list:
@@ -308,7 +336,7 @@ class EventNearMeListAPIView(ListAPIView):
                         if eventStatusItem.invited:
                             lint_score+=2
                 #status list for current user
-                status_list={'checked_in':False,'pinned':False,'liked':False,'paid':False,'guest_list':False,'invited':False}
+                status_list={'checked_in':False,'pinned':False,'liked':False,'joined':False,'going':False,'not_going':False,'paid':False,'guest_list':False,'invited':False}
                 eventStatusByUser=EventStatus.objects.filter(user_id=user_id,event_id=event['id']).first()    
                 if eventStatusByUser is not None:
                     if eventStatusByUser.checked_in:
@@ -317,6 +345,12 @@ class EventNearMeListAPIView(ListAPIView):
                         status_list['pinned']=True
                     if eventStatusByUser.liked:
                         status_list['liked']=True
+                    if eventStatusByUser.joined:
+                        status_list['joined']=True
+                    if eventStatusByUser.going:
+                        status_list['going']=True
+                    if eventStatusByUser.not_going:
+                        status_list['not_going']=True            
                     if eventStatusByUser.paid:
                         status_list['paid']=True
                     if eventStatusByUser.guest_list:

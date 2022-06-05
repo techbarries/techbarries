@@ -47,6 +47,11 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
     class ProfileAccessType(models.TextChoices):
         PUBLIC = 'PUBLIC', ('PUBLIC')
         PRIVATE = 'PRIVATE', ('PRIVATE')
+    class UserType(models.TextChoices):
+        REGULAR = 'REGULAR', ('REGULAR')
+        PROMOTER = 'PROMOTER', ('PROMOTER')        
+        VENUE_OWNER = 'VENUE_OWNER', ('VENUE_OWNER')        
+        PULSE_ADMIN = 'PULSE_ADMIN', ('PULSE_ADMIN')        
     """
     An abstract base class implementing a fully featured User model with
     admin-compliant permissions.
@@ -81,6 +86,7 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
     university=models.ForeignKey("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)
     email = models.EmailField(("email address"), blank=False,unique=True)
     profile_access_type=models.CharField(max_length=10,choices=ProfileAccessType.choices,default=ProfileAccessType.PUBLIC,null=True)   
+    user_type=models.CharField(max_length=50,choices=UserType.choices,default=UserType.REGULAR,null=True)   
 
     is_staff = models.BooleanField(
         ("staff status"),
