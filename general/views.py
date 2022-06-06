@@ -7,9 +7,11 @@ from authentication.models import User
 from authentication.serializers import UserSerializer
 from events.models import EventStatus
 from fcm import Fcm
-from general.models import Friends, Notification
-from general.serializers import FriendsSerializer, NotificationSerializer
+from general.models import Friends, InviteFriends, Notification
+from general.serializers import FriendsSerializer, InviteFriendsSerializer, NotificationSerializer
 from django.db.models import Q
+from authentication.twilio import Twilio
+
 
 # Create your views here.
 class CreateNotificationAPIView(CreateAPIView):
@@ -132,6 +134,35 @@ class CreateFriendRequestAPIView(CreateAPIView):
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
+
+class InviteByPhoneAPIView(CreateAPIView):
+    serializer_class=InviteFriendsSerializer
+    def post(self,request):
+        msg=""
+        try:
+            user_id=request.data['sent_by_user_id']
+            user=User.objects.filter(id=user_id).first()
+            if user is None:
+                res={"status":False,"message":"User not found","data":{}}
+                return Response(res)
+            if user.first_name is not None and  len(user.first_name)>0:
+                msg="You are invited to download Pulse APP by "+user.first_name+". Clicking the link: https://google.com"
+            else:
+                msg="You are invited to download Pulse APP by clicking the link: https://google.com"
+        except KeyError:
+            msg="You are invited to download Pulse APP by clicking the link: https://google.com"
+        if request.data['phone_number'] is not None:
+            phoneNumbers=request.data['phone_number']
+            phoneNumbers=phoneNumbers.split(",")
+            for phone in phoneNumbers:
+                userExists=User.objects.filter(phone_number=phone).first()
+                if userExists is None:
+                    InviteFriends.objects.create(phone_number=phone,sent_by_user_id=User.objects.get(id=request.data['sent_by_user_id']))
+                    twilio=Twilio(msg,phone)
+                    smsResponse=twilio.send()
+        res={"status":False,"message":"Sms sent to phone numbers.","data":{}}
+        return Response(res,status=status.HTTP_200_OK)        
+        
 
 class FriendRequestsListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):

@@ -33,4 +33,9 @@ class Friends(TrackingModel):
     notification=models.ForeignKey(to=Notification,related_name="friend_notification",blank=True,null=True,default=None,on_delete=models.CASCADE)
 
 
+class InviteFriends(TrackingModel):
+    sent_by_user_id=models.ForeignKey(to=User,related_name="invite_sent_by_user_id",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    phone_number = models.CharField(("phone number"), max_length=50, blank=True)
+
+
         
