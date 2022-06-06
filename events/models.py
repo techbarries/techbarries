@@ -66,6 +66,16 @@ class MenuImage(models.Model):
 class VenueImage(models.Model):
     venue = models.ForeignKey(Venue, related_name='venue_images',on_delete=models.CASCADE)
     image = models.ImageField(upload_to="venue/%Y/%m/%d/",blank=True)
+
+class RequestVenue(models.Model):
+    name=models.CharField(max_length=255)
+    city=models.CharField(max_length=255,blank=True,null=True)
+    user_id=models.ForeignKey(to=User,related_name="user_requested_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    class  Meta:  #new
+        verbose_name_plural  =  "Requested Venues"
+    def __str__(self):
+        return self.name      
+
 class Event(TrackingModel):
     class AccessType(models.TextChoices):
         PUBLIC = 'PUBLIC', ('PUBLIC')

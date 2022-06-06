@@ -6,7 +6,7 @@ from authentication.models import User
 from authentication.serializers import UserSerializer
 from events.models import EventImage, EventStatus, University, Venue,Event, VenueImage
 from rest_framework.response import Response
-from events.serializers import EventSerializer, UniversitySerializer, VenueSerializer
+from events.serializers import EventSerializer, RequestVenueSerializer, UniversitySerializer, VenueSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.db.models import Q
@@ -440,6 +440,21 @@ class CreateVenueAPIView(CreateAPIView):
 #     def get_queryset(self):
 #         return Venue.objects.all()
 
+class RequestVenueAPIView(CreateAPIView):
+    """
+    to create/request venue
+    name,city
+    """
+    serializer_class=RequestVenueSerializer
+    def post(self,request):
+        serializer=self.serializer_class(data=request.data)
+        res={"status":True,"message":"Venue requested successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)
 
 class VenueListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):

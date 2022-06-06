@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 from django.db import models
 from django.forms import SelectMultiple
 
-from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from events.serializers import EventSerializer
 
 # Register your models here.
@@ -83,6 +83,7 @@ class EventAdmin(admin.ModelAdmin):
     inlines = [ EventImageInline, ]
 admin.site.register(University)
 admin.site.register(Venue, VenueAdmin)
+admin.site.register(RequestVenue)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Dress)
 admin.site.register(Food)

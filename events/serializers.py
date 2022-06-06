@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from authentication.models import User
-from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from django.db.models import Q
 from general.models import Friends
 
@@ -100,4 +100,8 @@ class VenueSerializer(serializers.ModelSerializer):
     def get_longitude(self,obj):
         if obj.location is not None:
             return obj.location.longitude                 
-                 
+
+class RequestVenueSerializer(serializers.ModelSerializer): 
+        class Meta:
+            model=RequestVenue
+            fields='__all__'                
