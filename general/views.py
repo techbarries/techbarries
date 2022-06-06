@@ -1,4 +1,5 @@
 import ast
+import json
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView,ListAPIView
@@ -45,6 +46,13 @@ class NotificationListAPIView(ListAPIView):
             serializer = NotificationSerializer(notifications, many=True)
             notification_list=[]
             for device in serializer.data:
+                if device['details'] is not None:
+                    try:
+                        json_data = ast.literal_eval(device['details'])
+                        json_data['button_clicked']=""
+                        device['details']= json_data
+                    except:
+                        device['details']= device['details']
                 notification_list.append(device)
             res={"status":True,"message":"notifications found","data":{"notifications":notification_list}}
 
@@ -82,6 +90,13 @@ class NotificationAPIView(ListAPIView):
             serializer = NotificationSerializer(notifications, many=True)
             notification_list=[]
             for device in serializer.data:
+                if device['details'] is not None:
+                    try:
+                        json_data = ast.literal_eval(device['details'])
+                        json_data['button_clicked']=""
+                        device['details']= json_data
+                    except:
+                        device['details']= device['details']
                 notification_list.append(device)
             res={"status":True,"message":"notifications found","data":{"notifications":notification_list}}
         else:
