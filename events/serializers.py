@@ -84,6 +84,10 @@ class VenueSerializer(serializers.ModelSerializer):
     address=serializers.SerializerMethodField()
     latitude=serializers.SerializerMethodField()
     longitude=serializers.SerializerMethodField()
+    total_users_joined=serializers.SerializerMethodField()
+    is_open=serializers.SerializerMethodField()
+    available_slots=serializers.SerializerMethodField()
+    price_range=serializers.SerializerMethodField()
     class Meta:
         model=Venue
         fields='__all__'
@@ -99,7 +103,15 @@ class VenueSerializer(serializers.ModelSerializer):
             return obj.location.latitude        
     def get_longitude(self,obj):
         if obj.location is not None:
-            return obj.location.longitude                 
+            return obj.location.longitude 
+    def get_total_users_joined(self,obj):
+        return 75000
+    def get_is_open(self,obj):
+        return True
+    def get_available_slots(self,obj):
+        return "8pm-2pm"
+    def get_price_range(self,obj):
+        return "$25k-50k"                                                     
 
 class RequestVenueSerializer(serializers.ModelSerializer): 
         class Meta:
