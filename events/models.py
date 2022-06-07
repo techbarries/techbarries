@@ -53,6 +53,7 @@ class Venue(TrackingModel):
     email=models.CharField(max_length=255,blank=True,null=True)
     phone=models.CharField(max_length=255,blank=True,null=True)
     description=models.TextField(max_length=1000,blank=True,null=True)
+    promoter_user=models.ForeignKey(to=User,related_name="promoter_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     status=models.BooleanField(default=1,null=True,blank=True)
     location = PlacesField(null=True,blank=True)
@@ -130,3 +131,8 @@ class EventStatus(TrackingModel,models.Model):
     public=models.BooleanField(default=0,blank=True,null=True)
     not_going=models.BooleanField(default=0,blank=True,null=True)
 
+class VenueStatus(TrackingModel,models.Model):
+    venue_id = models.ForeignKey(Venue, related_name='venue_status',on_delete=models.CASCADE)
+    user_id=models.ForeignKey(to=User,related_name="user_venue_interaction",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    liked=models.BooleanField(default=0,blank=True,null=True)
+    joined=models.BooleanField(default=0,blank=True,null=True)

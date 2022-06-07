@@ -88,6 +88,8 @@ class VenueSerializer(serializers.ModelSerializer):
     is_open=serializers.SerializerMethodField()
     available_slots=serializers.SerializerMethodField()
     price_range=serializers.SerializerMethodField()
+    promoter_user=EventUserSerializer(read_only=True)
+    created_by=EventUserSerializer(read_only=True)
     class Meta:
         model=Venue
         fields='__all__'

@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
 from authentication.models import User
 from authentication.serializers import UserSerializer
-from events.models import EventImage, EventStatus, University, Venue,Event, VenueImage
+from events.models import EventImage, EventStatus, University, Venue,Event, VenueImage, VenueStatus
 from rest_framework.response import Response
 from events.serializers import EventSerializer, RequestVenueSerializer, UniversitySerializer, VenueSerializer
 from rest_framework import status
@@ -172,7 +172,36 @@ class EventStatusAPIView(APIView):
             res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
             return Response(res)
 
-
+class VenueStatusAPIView(APIView):
+    """Following are possible values for the status types
+    \n"joined","liked","un_liked""
+    """
+    def get(self,request,venue_id,user_id,status):
+        status_list = ["liked","un_liked","joined"]
+        if status in status_list:
+            venueStatus=VenueStatus.objects.filter(user_id=user_id,venue_id=venue_id).first()
+            if venueStatus is not None:
+                if status == "liked":
+                    venueStatus.liked=True
+                if status == "un_liked":
+                    venueStatus.liked=False 
+                if status == "joined":
+                    venueStatus.joined=True   
+                venueStatus.save();    
+                res={"status":True,"message":"Venue status updated successfully","data":{}}
+                return Response(res)
+            else:
+                if status == "liked":
+                    VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id) ,liked=True)
+                if status == "joined":
+                    VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id) ,joined=True)
+                if status == "un_liked":
+                    VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id),liked=False)    
+                res={"status":True,"message":"Venue status created successfully","data":{}}
+                return Response(res)
+        else:
+            res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
+            return Response(res)
         
         
 class EventListAPIView(ListAPIView):
@@ -577,10 +606,26 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                     events_list.append(event)
                 venue['events']=events_list
                 venue_list.append(venue)
+                venueStatus={'liked':False,'joined':False}
+                venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
+                if venueStatusByUser is not None:
+                     if venueStatusByUser.liked:
+                        venueStatus['liked']=True
+                     if venueStatusByUser.joined:
+                            venueStatus['joined']=True   
+                venue_list.append(venueStatus)
                 res={"status":True,"message":"venue found","data":{"venues":venue_list}}
             else:
                 venue['events']=[]
                 venue_list.append(venue)
+                venueStatus={'liked':False,'joined':False}
+                venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
+                if venueStatusByUser is not None:
+                     if venueStatusByUser.liked:
+                        venueStatus['liked']=True
+                     if venueStatusByUser.joined:
+                            venueStatus['joined']=True   
+                venue_list.append(venueStatus)
                 res={"status":True,"message":"event not found","data":{"venues":venue_list}}
     else:
         res={"status":True,"message":"venue not found","data":{"venues":[]}}
