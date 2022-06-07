@@ -613,7 +613,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                         venueStatus['liked']=True
                      if venueStatusByUser.joined:
                             venueStatus['joined']=True   
-                venue_list.append(venueStatus)
+                venue_list.append({"venue_status":venueStatus})
                 res={"status":True,"message":"venue found","data":{"venues":venue_list}}
             else:
                 venue['events']=[]
@@ -625,7 +625,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                         venueStatus['liked']=True
                      if venueStatusByUser.joined:
                             venueStatus['joined']=True   
-                venue_list.append(venueStatus)
+                venue_list.append({"venue_status":venueStatus})
                 res={"status":True,"message":"event not found","data":{"venues":venue_list}}
     else:
         res={"status":True,"message":"venue not found","data":{"venues":[]}}
