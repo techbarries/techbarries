@@ -605,27 +605,27 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                     event['is_live']=isLive
                     events_list.append(event)
                 venue['events']=events_list
-                venue_list.append(venue)
                 venueStatus={'liked':False,'joined':False}
                 venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
                 if venueStatusByUser is not None:
                      if venueStatusByUser.liked:
                         venueStatus['liked']=True
                      if venueStatusByUser.joined:
-                            venueStatus['joined']=True   
-                venue_list.append({"venue_status":venueStatus})
+                            venueStatus['joined']=True 
+                venue['venue_status']=venueStatus              
+                venue_list.append(venue)
                 res={"status":True,"message":"venue found","data":{"venues":venue_list}}
             else:
                 venue['events']=[]
-                venue_list.append(venue)
                 venueStatus={'liked':False,'joined':False}
                 venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
                 if venueStatusByUser is not None:
                      if venueStatusByUser.liked:
                         venueStatus['liked']=True
                      if venueStatusByUser.joined:
-                            venueStatus['joined']=True   
-                venue_list.append({"venue_status":venueStatus})
+                            venueStatus['joined']=True 
+                venue['venue_status']=venueStatus                
+                venue_list.append(venue)
                 res={"status":True,"message":"event not found","data":{"venues":venue_list}}
     else:
         res={"status":True,"message":"venue not found","data":{"venues":[]}}
