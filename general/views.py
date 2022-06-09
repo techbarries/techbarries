@@ -11,6 +11,8 @@ from general.models import Friends, InviteFriends, Notification
 from general.serializers import FriendsSerializer, InviteFriendsSerializer, NotificationSerializer
 from django.db.models import Q
 from authentication.twilio import Twilio
+from rest_framework.views import APIView
+
 
 
 # Create your views here.
@@ -36,7 +38,15 @@ class CreateNotificationAPIView(CreateAPIView):
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
-
+class DeleteNotificationAPIView(APIView):
+    def delete(self,request,id, *args, **kwargs):
+         notification=Notification.objects.filter(id=id).first()
+         if notification is not None:
+            notification.delete()
+            res={"status":True,"message":"Notification deleted successfully","data":{}}
+         else:
+            res={"status":False,"message":"Notification not found","data":{}}
+         return Response(res,status=status.HTTP_200_OK)     
 class NotificationListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
