@@ -55,6 +55,7 @@ class Venue(TrackingModel):
     description=models.TextField(max_length=1000,blank=True,null=True)
     promoter_user=models.ForeignKey(to=User,related_name="promoter_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
     created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    featured=models.BooleanField(default=False,null=True,blank=True)
     status=models.BooleanField(default=1,null=True,blank=True)
     location = PlacesField(null=True,blank=True)
     def __str__(self):
