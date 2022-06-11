@@ -36,9 +36,12 @@ class VenueAdmin(admin.ModelAdmin):
     exclude=('address','latitude','longitude')
     formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px'})}, }
     def save_model(self, request, obj, form, change):
-        obj.address = obj.location.place
-        obj.latitude = obj.location.latitude
-        obj.longitude = obj.location.longitude
+        try:
+            obj.address = obj.location.place
+            obj.latitude = obj.location.latitude
+            obj.longitude = obj.location.longitude
+        except:
+            pass    
         super().save_model(request, obj, form, change)
 
     def showLintScore(self,obj):
