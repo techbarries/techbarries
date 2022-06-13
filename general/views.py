@@ -139,8 +139,9 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 friendRequest.save()
                 sentToUser=User.objects.get(id=request.data['sent_to_user_id'])
                 if sentToUser is not None:
-                    fcm=Fcm()
-                    fcm.send(sentToUser.user_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
+                    if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
+                        fcm=Fcm()
+                        fcm.send(sentToUser.user_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)

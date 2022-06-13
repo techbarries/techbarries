@@ -50,7 +50,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'django_filters',
-    'places'
+    'places',
+    'phonenumber_field',
+    'import_export'
 ]
 
 MIDDLEWARE = [

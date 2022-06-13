@@ -52,9 +52,10 @@ class CreateEventAPIView(CreateAPIView):
                     details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":""}
                     Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest))
                     sentToUser=User.objects.get(id=guest)
-                    if sentToUser is not None and len(sentToUser.user_token)>0:
-                        fcm=Fcm()
-                        fcm.send(sentToUser.user_token,"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
+                    if sentToUser is not None:
+                        if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
+                            fcm=Fcm()
+                            fcm.send(sentToUser.user_token,"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
     
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
@@ -172,6 +173,43 @@ class EventStatusAPIView(APIView):
             res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
             return Response(res)
 
+class EventShareAPIView(APIView):
+     def get(self,request,event_id,user_id,to_user_id):
+            user=User.objects.filter(id=user_id).first()
+            to_user=User.objects.filter(id=to_user_id).first()
+            event=Event.objects.filter(id=event_id).first()
+            if user is None:
+                res={"status":False,"message":"User not found","data":{}}
+                return Response(res)
+            if to_user is None:
+                res={"status":False,"message":"To User not found","data":{}}
+                return Response(res)    
+            if event is None:
+                res={"status":False,"message":"Event not found","data":{}}
+                return Response(res)
+            serializer=EventSerializer(event)
+            serializer_user=UserSerializer(user)
+            date=serializer.data['event_start_date']
+            if date:
+                cDate=datetime.strptime(date,'%Y-%m-%d')
+                date=cDate.strftime('%A, %B %d, %Y')
+            else:
+                date="today"    
+            if serializer.data['name'] or date or serializer_user.data['first_name']  is None:
+                desc="Someone shared event with you"
+            else:
+                desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
+            details={"has_button":False,"id":serializer.data['id']}
+            Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=to_user_id))
+            sentToUser=User.objects.filter(id=to_user_id).first()
+            if sentToUser is not None:
+                if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
+                    fcm=Fcm()
+                    fcm.send(sentToUser.user_token,"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})  
+            res={"status":True,"message":"Shared event successfully","data":{}}
+            return Response(res)
+
+
 class VenueStatusAPIView(APIView):
     """Following are possible values for the status types
     \n"joined","liked","un_liked""
@@ -211,7 +249,7 @@ class EventListAPIView(ListAPIView):
             res={"status":False,"message":"User not found","data":{}}
             return Response(res)
         eventStatusIds=EventStatus.objects.values_list('event_id',flat=True).filter(user_id=user_id).all()    
-        events=Event.objects.filter((Q(user_id=user_id) | Q(pk__in=set(eventStatusIds))),status=True).all()
+        events=Event.objects.filter((Q(user_id=user_id) | Q(pk__in=set(eventStatusIds))),archived=False).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             events_list=[]
@@ -310,7 +348,7 @@ class EventNearMeListAPIView(ListAPIView):
             return Response(res)
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE status=1 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE archived=0 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         events=Event.objects.raw(query)
         if len(events)> 0:
             serializer = EventSerializer(events, many=True)
@@ -403,7 +441,7 @@ class EventNearMeListAPIView(ListAPIView):
         return Response(res)
 class PastEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
-        events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today(),status=True).all()
+        events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today(),archived=False).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             res={"status":True,"message":"events found","data":{"events":serializer.data}}
@@ -412,7 +450,7 @@ class PastEventListAPIView(ListAPIView):
         return Response(res)
 class UpcomingEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
-        events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today(),status=True).all()
+        events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today(),archived=False).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             res={"status":True,"message":"events found","data":{"events":serializer.data}}
@@ -506,14 +544,14 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
     if latitude is not None and longitude is not None:
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where status=1  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where archived=0  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         venues=Venue.objects.raw(query)
         venueCount=len(venues)
     elif popular:
-        venues=Venue.objects.filter(status=True).all()
+        venues=Venue.objects.filter(archived=False).all()
         venueCount=venues.count()
     else:    
-        venues=Venue.objects.filter(created_by=user_id,status=True).all()
+        venues=Venue.objects.filter(archived=False).all()
         venueCount=venues.count()
     if venueCount > 0:
         serializer = VenueSerializer(venues, many=True)
@@ -524,7 +562,8 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
             venueDataList=serializer.data
 
         for venue in venueDataList:
-            events=Event.objects.filter(venue=venue['id'],status=True).all()
+            events=Event.objects.filter(venue=venue['id'],archived=False).all()
+            liveEventCount=0
             if events.count() > 0:
                 serializer = EventSerializer(events, many=True)
                 events_list=[]
@@ -602,6 +641,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                         current_time = datetime.now().strftime('%H:%M:%S')
                         if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
                             isLive=True
+                            liveEventCount+=1
                     event['is_live']=isLive
                     events_list.append(event)
                 venue['events']=events_list
@@ -613,6 +653,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                      if venueStatusByUser.joined:
                             venueStatus['joined']=True 
                 venue['venue_status']=venueStatus              
+                venue['has_live_event']=True if liveEventCount > 0 else False              
                 venue_list.append(venue)
                 res={"status":True,"message":"venue found","data":{"venues":venue_list}}
             else:
@@ -624,7 +665,8 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                         venueStatus['liked']=True
                      if venueStatusByUser.joined:
                             venueStatus['joined']=True 
-                venue['venue_status']=venueStatus                
+                venue['venue_status']=venueStatus 
+                venue['has_live_event']=True if liveEventCount > 0 else False               
                 venue_list.append(venue)
                 res={"status":True,"message":"event not found","data":{"venues":venue_list}}
     else:

@@ -5,12 +5,13 @@ from django.forms import SelectMultiple
 
 from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from events.serializers import EventSerializer
+from import_export.admin import ImportExportModelAdmin
 
 # Register your models here.
 class VenueImageInline(admin.TabularInline):
     model = VenueImage
     readonly_fields = ('image_preview',)
-    extra = 3
+    extra = 1
     def image_preview(self, obj):
         # ex. the name of column is "image"
         if obj.image:
@@ -22,7 +23,7 @@ class VenueImageInline(admin.TabularInline):
 class VenueMenuImageInline(admin.TabularInline):
     model = MenuImage
     readonly_fields = ('image_preview',)
-    extra = 3
+    extra = 1
     def image_preview(self, obj):
         # ex. the name of column is "image"
         if obj.image:
@@ -31,7 +32,7 @@ class VenueMenuImageInline(admin.TabularInline):
             return '(No image)'
 
     image_preview.short_description = 'Preview'     
-class VenueAdmin(admin.ModelAdmin):
+class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     inlines = [ VenueMenuImageInline,VenueImageInline, ]
     exclude=('address','latitude','longitude')
     formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px'})}, }
@@ -46,7 +47,7 @@ class VenueAdmin(admin.ModelAdmin):
 
     def showLintScore(self,obj):
         lint_score=0
-        events=Event.objects.filter(venue=obj.id,status=True).all()
+        events=Event.objects.filter(venue=obj.id,archived=True).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
             for event in serializer.data:
@@ -67,13 +68,16 @@ class VenueAdmin(admin.ModelAdmin):
         return lint_score
 
     showLintScore.short_description="Lint Score"
-    showLintScore.allow_tags = True    
-    list_display=("id","venue_name","showLintScore",)
+    showLintScore.allow_tags = True
+    def has_delete_permission(self, request, obj=None):
+        return False     
+    list_display=("venue_name","description","address","created_at","showLintScore",)
+    search_fields = ['venue_name','description','address','created_at']
             
 class EventImageInline(admin.TabularInline):
     model = EventImage
     readonly_fields = ('image_preview',)
-    extra = 3
+    extra = 1
     def image_preview(self, obj):
         # ex. the name of column is "image"
         if obj.image:
@@ -82,9 +86,19 @@ class EventImageInline(admin.TabularInline):
             return '(No image)'
 
     image_preview.short_description = 'Preview'    
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     inlines = [ EventImageInline, ]
-admin.site.register(University)
+    def has_delete_permission(self, request, obj=None):
+        return False     
+    list_display=("name","description","address","venue","boost_enabled","created_at",)
+    search_fields = ['name','description','address','created_at']
+class UniversityAdmin(ImportExportModelAdmin,admin.ModelAdmin):
+    def has_delete_permission(self, request, obj=None):
+        return False     
+    list_display=("university_name","city","archived","created_at",)
+    search_fields = ['university_name','city','archived','created_at']
+
+admin.site.register(University,UniversityAdmin)
 admin.site.register(Venue, VenueAdmin)
 admin.site.register(RequestVenue)
 admin.site.register(Event, EventAdmin)

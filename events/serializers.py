@@ -3,6 +3,7 @@ from authentication.models import User
 from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from django.db.models import Q
 from general.models import Friends
+from datetime import datetime
 
 class EventImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,7 +73,7 @@ class MusicSerializer(serializers.ModelSerializer):
 class AgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Age
-        fields=['pk','age_name']                        
+        fields=['pk','age_name']                                  
 class VenueSerializer(serializers.ModelSerializer):
     venue_images=VenueImageSerializer(many=True,read_only=True)
     venue_menu_images=VenueMenuImageSerializer(many=True,read_only=True)
@@ -107,13 +108,33 @@ class VenueSerializer(serializers.ModelSerializer):
         if obj.location is not None:
             return obj.location.longitude 
     def get_total_users_joined(self,obj):
-        return 75000
+        events=Event.objects.values_list('id',flat=True).filter(venue=obj.id,archived=False).all()
+        usersJoined=0
+        if events.count()>0:
+            eventStatus=EventStatus.objects.filter((Q(event_id__in=set(events))),joined=True).all()
+            usersJoined=eventStatus.count()
+
+        return usersJoined
     def get_is_open(self,obj):
-        return True
+        now = datetime.now()
+        dayName=now.strftime("%A").lower()
+        current_time =str( datetime.now().strftime('%H:%M:%S'))
+        isOpen=False
+        startTime=str( getattr(obj,dayName+"_start_time"))
+        endTime=str( getattr(obj,dayName+"_end_time"))
+        if getattr(obj,dayName) and startTime and endTime:
+            if endTime < startTime:
+                return current_time >= startTime or current_time <= endTime
+            return startTime <= current_time <= endTime 
+        return isOpen
     def get_available_slots(self,obj):
-        return "8pm-2pm"
+        now = datetime.now()
+        dayName=now.strftime("%A").lower()
+        startTime=getattr(obj,dayName+"_start_time")
+        endTime=getattr(obj,dayName+"_end_time")
+        return str(startTime.strftime("%I:%M") ) +"-"+str(endTime.strftime("%I:%M")) 
     def get_price_range(self,obj):
-        return "$25k-50k"                                                     
+        return obj.price_details                                                     
 
 class RequestVenueSerializer(serializers.ModelSerializer): 
         class Meta:
