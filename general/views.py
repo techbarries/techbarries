@@ -141,9 +141,9 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 if sentToUserDevices.count()>0:
                     serializer=DeviceSerializer(sentToUserDevices,many=True)
                     for device in serializer.data:
-                        if device.fcm_token is not None and len(device.fcm_token)>0:
+                        if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                             fcm=Fcm()
-                            fcm.send(device.fcm_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
+                            fcm.send(device['fcm_token'],"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
