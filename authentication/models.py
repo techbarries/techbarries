@@ -120,6 +120,8 @@ class Device(TrackingModel):
     user_id=models.ForeignKey(to=User,related_name="user",on_delete=models.CASCADE)      
     created_by=models.ForeignKey(to=User,related_name="created_by_user",on_delete=models.CASCADE,null=True,default=None)      
 
+    def __str__(self):
+        return str(self.user_id)
     @property
     def token(self):
         return ""
