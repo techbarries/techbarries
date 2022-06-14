@@ -3,8 +3,8 @@ import json
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView,ListAPIView
-from authentication.models import User
-from authentication.serializers import UserSerializer
+from authentication.models import Device, User
+from authentication.serializers import DeviceSerializer, UserSerializer
 from events.models import EventStatus
 from fcm import Fcm
 from general.models import Friends, InviteFriends, Notification
@@ -137,11 +137,13 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
                 friendRequest.notification=notification
                 friendRequest.save()
-                sentToUser=User.objects.get(id=request.data['sent_to_user_id'])
-                if sentToUser is not None:
-                    if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
-                        fcm=Fcm()
-                        fcm.send(sentToUser.user_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
+                sentToUserDevices=Device.objects.filter(user_id=request.data['sent_to_user_id'])
+                if sentToUserDevices.count()>0:
+                    serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in serializer.data:
+                        if device.fcm_token is not None and len(device.fcm_token)>0:
+                            fcm=Fcm()
+                            fcm.send(device.fcm_token,"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)

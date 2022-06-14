@@ -2,8 +2,8 @@ from datetime import date, datetime
 from unicodedata import name
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
-from authentication.models import User
-from authentication.serializers import UserSerializer
+from authentication.models import Device, User
+from authentication.serializers import DeviceSerializer, UserSerializer
 from events.models import EventImage, EventStatus, University, Venue,Event, VenueImage, VenueStatus
 from rest_framework.response import Response
 from events.serializers import EventSerializer, RequestVenueSerializer, UniversitySerializer, VenueSerializer
@@ -51,11 +51,14 @@ class CreateEventAPIView(CreateAPIView):
                     desc="You have been invited to the event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
                     details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":""}
                     Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest))
-                    sentToUser=User.objects.get(id=guest)
-                    if sentToUser is not None:
-                        if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
-                            fcm=Fcm()
-                            fcm.send(sentToUser.user_token,"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
+                    
+                    sentToUserDevices=Device.objects.filter(user_id=guest)
+                    if sentToUserDevices.count()>0:
+                        serializer=DeviceSerializer(sentToUserDevices,many=True)
+                        for device in serializer.data:
+                            if device.fcm_token is not None and len(device.fcm_token)>0:
+                                fcm=Fcm()
+                                fcm.send(device.fcm_token,"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
     
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
@@ -201,11 +204,13 @@ class EventShareAPIView(APIView):
                 desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
             details={"has_button":False,"id":serializer.data['id']}
             Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=to_user_id))
-            sentToUser=User.objects.filter(id=to_user_id).first()
-            if sentToUser is not None:
-                if sentToUser.user_token is not None and len(sentToUser.user_token)>0:
-                    fcm=Fcm()
-                    fcm.send(sentToUser.user_token,"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})  
+            sentToUserDevices=Device.objects.filter(user_id=to_user_id)
+            if sentToUserDevices.count()>0:
+                serializer=DeviceSerializer(sentToUserDevices,many=True)
+                for device in serializer.data:
+                    if device.fcm_token is not None and len(device.fcm_token)>0:
+                        fcm=Fcm()
+                        fcm.send(device.fcm_token,"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})              
             res={"status":True,"message":"Shared event successfully","data":{}}
             return Response(res)
 
