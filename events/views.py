@@ -177,42 +177,69 @@ class EventStatusAPIView(APIView):
             return Response(res)
 
 class EventShareAPIView(APIView):
-     def get(self,request,event_id,user_id,to_user_id):
-            user=User.objects.filter(id=user_id).first()
-            to_user=User.objects.filter(id=to_user_id).first()
-            event=Event.objects.filter(id=event_id).first()
-            if user is None:
-                res={"status":False,"message":"User not found","data":{}}
-                return Response(res)
-            if to_user is None:
-                res={"status":False,"message":"To User not found","data":{}}
-                return Response(res)    
-            if event is None:
-                res={"status":False,"message":"Event not found","data":{}}
-                return Response(res)
-            serializer=EventSerializer(event)
-            serializer_user=UserSerializer(user)
-            date=serializer.data['event_start_date']
-            if date:
-                cDate=datetime.strptime(date,'%Y-%m-%d')
-                date=cDate.strftime('%A, %B %d, %Y')
-            else:
-                date="today"    
-            if serializer.data['name'] or date or serializer_user.data['first_name']  is None:
-                desc="Someone shared event with you"
-            else:
-                desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
-            details={"has_button":False,"id":serializer.data['id']}
-            Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=to_user_id))
-            sentToUserDevices=Device.objects.filter(user_id=to_user_id)
-            if sentToUserDevices.count()>0:
-                serializer=DeviceSerializer(sentToUserDevices,many=True)
-                for device in serializer.data:
-                    if device['fcm_token'] is not None and len(device['fcm_token'])>0:
-                        fcm=Fcm()
-                        fcm.send(device['fcm_token'],"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})              
+     """Required data
+     {
+    "event_id":1,
+    "user_id":1,
+    "to_user_id":[
+        1,
+        2,
+        3
+    ]
+}
+     """
+     def post(self,request):
+        try:
+            request.data['event_id']
+            request.data['user_id']
+            request.data['to_user_id']
+        except KeyError:
+            res={"status":False,"message":"data missing event_id, user_id,to_user_id","data":{}}
+            return Response(res,status=status.HTTP_200_OK)   
+        event_id=request.data['event_id']
+        user_id=request.data['user_id']
+        to_user_id=request.data['to_user_id']
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        event=Event.objects.filter(id=event_id).first()
+        if event is None:
+            res={"status":False,"message":"Event not found","data":{}}
+            return Response(res)
+        serializer=EventSerializer(event)
+        serializer_user=UserSerializer(user)
+        date=serializer.data['event_start_date']
+        if date:
+            cDate=datetime.strptime(date,'%Y-%m-%d')
+            date=cDate.strftime('%A, %B %d, %Y')
+        else:
+            date="today"    
+        if serializer.data['name'] or date or serializer_user.data['first_name']  is None:
+            desc="Someone shared event with you"
+        else:
+            desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
+        details={"has_button":False,"id":serializer.data['id']}    
+        if to_user_id is not None:
+            toUsersIds=to_user_id
+            toUsers=toUsersIds
+            for toUser in toUsers:            
+                to_user=User.objects.filter(id=toUser).first()
+                if to_user is None:
+                    res={"status":False,"message":"To User not found","data":{}}
+                    return Response(res)    
+                Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=toUser))
+                sentToUserDevices=Device.objects.filter(user_id=toUser)
+                if sentToUserDevices.count()>0:
+                    serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in serializer.data:
+                        if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                            fcm=Fcm()
+                            fcm.send(device['fcm_token'],"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})              
             res={"status":True,"message":"Shared event successfully","data":{}}
             return Response(res)
+        res={"status":False,"message":"to_user_id missing","data":{}}
+        return Response(res,status=status.HTTP_200_OK)           
 
 
 class VenueStatusAPIView(APIView):
