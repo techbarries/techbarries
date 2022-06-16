@@ -361,7 +361,7 @@ class EventListAPIView(ListAPIView):
                 event['status_list']=status_list
                 event['lint_score']=lint_score
                 isLive=False
-                if str(event['event_end_date']) == str(date.today()):
+                if datetime.strptime(event['event_end_date'],"%Y-%m-%d")  >= datetime.today() >= datetime.strptime(event['event_start_date'],"%Y-%m-%d"):
                     current_time = datetime.now().strftime('%H:%M:%S')
                     if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
                         isLive=True
@@ -461,7 +461,7 @@ class EventNearMeListAPIView(ListAPIView):
                 event['status_list']=status_list
                 event['lint_score']=lint_score
                 isLive=False
-                if str(event['event_end_date']) == str(date.today()):
+                if datetime.strptime(event['event_end_date'],"%Y-%m-%d")  >= datetime.today() >= datetime.strptime(event['event_start_date'],"%Y-%m-%d"):
                     current_time = datetime.now().strftime('%H:%M:%S')
                     if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
                         isLive=True
@@ -669,7 +669,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                     event['status_list']=status_list
                     event['lint_score']=lint_score
                     isLive=False
-                    if str(event['event_end_date']) == str(date.today()):
+                    if datetime.strptime(event['event_end_date'],"%Y-%m-%d")  >= datetime.today() >= datetime.strptime(event['event_start_date'],"%Y-%m-%d"):
                         current_time = datetime.now().strftime('%H:%M:%S')
                         if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
                             isLive=True
