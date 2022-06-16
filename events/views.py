@@ -54,8 +54,8 @@ class CreateEventAPIView(CreateAPIView):
                     
                     sentToUserDevices=Device.objects.filter(user_id=guest)
                     if sentToUserDevices.count()>0:
-                        serializer=DeviceSerializer(sentToUserDevices,many=True)
-                        for device in serializer.data:
+                        device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                        for device in device_serializer.data:
                             if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                                 fcm=Fcm()
                                 fcm.send(device['fcm_token'],"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
@@ -231,8 +231,8 @@ class EventShareAPIView(APIView):
                 Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=toUser))
                 sentToUserDevices=Device.objects.filter(user_id=toUser)
                 if sentToUserDevices.count()>0:
-                    serializer=DeviceSerializer(sentToUserDevices,many=True)
-                    for device in serializer.data:
+                    device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in device_serializer.data:
                         if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                             fcm=Fcm()
                             fcm.send(device['fcm_token'],"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})              
