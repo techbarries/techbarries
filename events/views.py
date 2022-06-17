@@ -1,3 +1,4 @@
+import ast
 from datetime import date, datetime
 from unicodedata import name
 from django.shortcuts import render
@@ -49,7 +50,7 @@ class CreateEventAPIView(CreateAPIView):
                 if user is not None:
                     serializer_user=UserSerializer(user)
                     desc="You have been invited to the event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
-                    details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":""}
+                    details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":"","action":None}
                     Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest))
                     
                     sentToUserDevices=Device.objects.filter(user_id=guest)
@@ -489,6 +490,54 @@ class UpcomingEventListAPIView(ListAPIView):
         else:
             res={"status":False,"message":"Not found","data":{}}
         return Response(res)
+
+class EventNotificaionStatusAPIView(ListAPIView):
+    """
+    Available statuses
+    'accept/decline'
+    """
+    def list(self, request,user_id,notificaion_id,event_id,status, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        event=Event.objects.filter(pk=event_id).first()
+        if event is None:
+            res={"status":False,"message":"Event not found","data":{}}
+            return Response(res)
+        notification=Notification.objects.filter(id=notificaion_id).first()
+        if notification is None:
+            res={"status":False,"message":"Notification not found","data":{}}
+            return Response(res)            
+        eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
+        if  status=='accept':
+            if eventStatus is not None:
+                eventStatus.joined=True
+            else:
+                EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,joined=True)                 
+            #
+            details=notification.details
+            if details:
+                details=ast.literal_eval(details)
+                details.update({"desc":"You have accepted event invite","action":"accepted"})
+            notification.details=details
+            notification.save()      
+            res={"status":True,"message":"Event accepted successfully","data":{}}
+        elif status=='decline':
+            # 
+            if eventStatus is not None:
+                eventStatus.delete()
+            details=notification.details
+            if details:
+                details=ast.literal_eval(details)
+                details.update({"desc":"You have declined event invite","action":"declined"})
+            notification.details=details
+            notification.save()
+            res={"status":True,"message":"Event declined successfully","data":{}}
+        else:
+            res={"status":False,"message":"provide valid status,'accept/decline'","data":{}}
+        return Response(res)
+
 class UniversityListAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
         universities=University.objects.filter().values()
