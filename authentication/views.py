@@ -51,7 +51,15 @@ class PulseUserAPIView(GenericAPIView):
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)           
 
-
+class DeleteUserAPIView(APIView):
+    def delete(self,request,id, *args, **kwargs):
+        user=User.objects.filter(id=id).first()
+        if user is not None and user.is_active:
+            user.delete()
+            res={"status":True,"message":"User deleted successfully","data":{}}
+        else:
+            res={"status":False,"message":"User not found","data":{}}
+        return Response(res,status=status.HTTP_200_OK)
 class UserListAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
         users=User.objects.filter(is_active=1,is_superuser=False).all()
