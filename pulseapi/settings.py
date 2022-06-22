@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'authentication',
     'events',
     'general',
+    'payments',
     'rest_framework',
     'drf_yasg',
     'django_filters',

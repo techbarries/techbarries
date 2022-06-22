@@ -12,3 +12,4 @@ requests
 django-phonenumber-field
 django-phonenumbers
 django-import-export
+stripe

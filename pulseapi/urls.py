@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/friend/', include("general.friends_urls")),
     path('api/otp/', include("authentication.otp_urls")),
     path('api/event/', include("events.urls")),
+    path('api/payment/', include("payments.urls")),
     path('api/university/', include("events.uni_urls")),
     path('api/venue/', include("events.venue_urls")),
     # path('swagger', schema_view.without_ui(cache_timeout=0), name='schema-json'),
