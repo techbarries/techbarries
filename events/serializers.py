@@ -93,7 +93,8 @@ class VenueSerializer(serializers.ModelSerializer):
     created_by=EventUserSerializer(read_only=True)
     class Meta:
         model=Venue
-        fields='__all__'
+        # fields='__all__'
+        exclude=('monday','monday_start_time','monday_end_time','tuesday','tuesday_start_time','tuesday_end_time','wednesday','wednesday_start_time','wednesday_end_time','thursday','thursday_start_time','thursday_end_time','friday','friday_start_time','friday_end_time','saturday','saturday_start_time','saturday_end_time','sunday','sunday_start_time','sunday_end_time','created_at','updated_at','archived')
 
     def get_event_count(self,obj):
         eventStatus=Event.objects.filter(venue=obj.id)

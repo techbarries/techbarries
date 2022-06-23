@@ -1,3 +1,4 @@
+from datetime import datetime
 import imp
 from django.db import models
 from helpers.models import TrackingModel
@@ -80,32 +81,32 @@ class Venue(TrackingModel):
         blank=True
     )
     monday = models.BooleanField(default=True,blank=True)
-    monday_start_time=models.TimeField(blank=True,null=True)
-    monday_end_time=models.TimeField(blank=True,null=True)
+    monday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    monday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     tuesday = models.BooleanField(default=True,blank=True)
-    tuesday_start_time=models.TimeField(blank=True,null=True)
-    tuesday_end_time=models.TimeField(blank=True,null=True)
+    tuesday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    tuesday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     wednesday = models.BooleanField(default=True,blank=True)
-    wednesday_start_time=models.TimeField(blank=True,null=True)
-    wednesday_end_time=models.TimeField(blank=True,null=True)
+    wednesday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    wednesday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     thursday = models.BooleanField(default=True,blank=True)
-    thursday_start_time=models.TimeField(blank=True,null=True)
-    thursday_end_time=models.TimeField(blank=True,null=True)
+    thursday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    thursday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     friday = models.BooleanField(default=True,blank=True)
-    friday_start_time=models.TimeField(blank=True,null=True)
-    friday_end_time=models.TimeField(blank=True,null=True)
+    friday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    friday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     saturday = models.BooleanField(default=True,blank=True)
-    saturday_start_time=models.TimeField(blank=True,null=True)
-    saturday_end_time=models.TimeField(blank=True,null=True)
+    saturday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    saturday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     sunday = models.BooleanField(default=True,blank=True)
-    sunday_start_time=models.TimeField(blank=True,null=True)
-    sunday_end_time=models.TimeField(blank=True,null=True)
+    sunday_start_time=models.TimeField(blank=True,null=True,default=datetime.now)
+    sunday_end_time=models.TimeField(blank=True,null=True,default=datetime.now)
 
     email=models.EmailField(max_length=255,blank=True,null=True)
     phone=PhoneNumberField(blank=True,null=True)
