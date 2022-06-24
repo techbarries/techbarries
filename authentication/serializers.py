@@ -2,7 +2,7 @@ from dataclasses import fields
 import imp
 from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
-from authentication.models import Device, SmsOTP, User
+from authentication.models import Device, SmsOTP, User, UserCardBilling
 from events.models import EventStatus
 from general.models import Friends
 from events.serializers import UniversitySerializer
@@ -87,7 +87,11 @@ class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model=Device
         fields='__all__'
-
+class UserCardBillingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=UserCardBilling
+        fields='__all__'
+        
 class SmsOTPSerializer(serializers.ModelSerializer):
     class Meta:
         model=SmsOTP

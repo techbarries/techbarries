@@ -5,8 +5,8 @@ import imp
 from telnetlib import STATUS
 from urllib import response
 from rest_framework.generics import GenericAPIView,CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
-from authentication.models import Device, SmsOTP, User
-from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserSerializer
+from authentication.models import Device, SmsOTP, User, UserCardBilling
+from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserCardBillingSerializer, UserSerializer
 from rest_framework import response,status
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -262,9 +262,45 @@ class VerifySmsOTP(APIView):
         return Response(res)
  
 
-
+class CreateCardBillingAPIView(CreateAPIView):
+    serializer_class=UserCardBillingSerializer
+    def post(self,request):
+        serializer=self.serializer_class(data=request.data)
+        res={"status":True,"message":"Card billling created successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            res.update(data=serializer.data)
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)
             
 
-            
+class CardBillingListAPIView(ListAPIView):
+    def list(self, request,user_id,otp, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        phone=user.phone_number
+        if phone is None or len(phone)==0:
+            res={"status":False,"message":"User phone not found","data":{}}
+            return Response(res)
+        smsOtp=SmsOTP.objects.filter(phone=user.phone_number,otp=otp,is_verified=0).first()    
+        if smsOtp is None:
+            res={"status":False,"message":"Invalid otp provided","data":{}}
+            return Response(res)
+        smsOtp.is_verified=1
+        smsOtp.save()
+        cardBillings=UserCardBilling.objects.filter(user_id=user_id).all()
+        if cardBillings.count() > 0:
+            serializer = UserCardBillingSerializer(cardBillings, many=True)
+            card_billing_list=[]
+            for card in serializer.data:
+                card_billing_list.append(card)
+            res={"status":True,"message":"card billing list found","data":{"cards":card_billing_list}}
+
+        else:
+            res={"status":True,"message":"card not found","data":{"cards":[]}}
+        return Response(res)             
 
         

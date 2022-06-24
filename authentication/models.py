@@ -4,6 +4,7 @@ from helpers.models import TrackingModel
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django_cryptography.fields import encrypt
 
 # Create your models here.
 from django.contrib.auth.models import (
@@ -125,6 +126,22 @@ class Device(TrackingModel):
     @property
     def token(self):
         return ""
+
+
+class UserCardBilling(TrackingModel):
+    card_number= encrypt(models.CharField(max_length=255))
+    month=encrypt(models.IntegerField(blank=True,null=True))
+    year=encrypt(models.IntegerField(blank=True,null=True))
+    cvv=encrypt(models.CharField(max_length=255,blank=True,null=True)) 
+    card_holder_name=encrypt(models.CharField(max_length=255,blank=True,null=True)) 
+    country = encrypt(models.CharField(("Country"), max_length=100, blank=True,null=True))
+    address = encrypt(models.CharField(("Address"), max_length=255, blank=True,null=True))
+    city = encrypt(models.CharField(("City"), max_length=100, blank=True,null=True))
+    state = encrypt(models.CharField(("State"), max_length=100, blank=True,null=True))
+    user_id=models.ForeignKey(to=User,related_name="card_user",on_delete=models.CASCADE)      
+
+    def __str__(self):
+        return str(self.user_id)
 
 class SmsOTP(TrackingModel,models.Model):
     phone = models.IntegerField(blank=False)
