@@ -2,7 +2,7 @@ import email
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.db import models
-from django.forms import SelectMultiple
+from django.forms import SelectMultiple, TimeInput
 from authentication.models import User
 from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from events.serializers import EventSerializer
@@ -36,7 +36,6 @@ class VenueMenuImageInline(admin.TabularInline):
 class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     inlines = [ VenueMenuImageInline,VenueImageInline, ]
     exclude=('address','latitude','longitude')
-    formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px;min-height:80px'})}, }
     def save_model(self, request, obj, form, change):
         try:
             obj.address = obj.location.place
@@ -74,6 +73,37 @@ class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
         return False     
     list_display=("venue_name","description","address","created_at","showLintScore",)
     search_fields = ['venue_name','description','address','created_at']
+    fieldsets=[
+        (
+           "Basic Info",{
+               'fields':('venue_name','description','location','price_details','featured')
+           } 
+        ),
+        (
+           "Attractions",{
+               'fields':('dresses','foods','musics','ages')
+           } 
+        ),
+        (
+           "Bussiness Hours",{
+               'fields':
+               ('monday',('monday_start_time','monday_end_time')
+               ,'tuesday',('tuesday_start_time','tuesday_end_time')
+               ,'wednesday',('wednesday_start_time','wednesday_end_time')
+               ,'thursday',('thursday_start_time','thursday_end_time')
+               ,'friday',('friday_start_time','friday_end_time')
+               ,'saturday',('saturday_start_time','saturday_end_time')
+               ,'sunday',('sunday_start_time','sunday_end_time'))
+           } 
+        ),
+        (
+           "Contact Info",{
+               'fields':('email','phone','promoter_user','created_by','archived')
+           } 
+        ),
+    ]
+    formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px;min-height:80px'})},models.TimeField:{'widget':TimeInput(attrs={'size':'20'})}, }
+
             
 class EventImageInline(admin.TabularInline):
     model = EventImage
