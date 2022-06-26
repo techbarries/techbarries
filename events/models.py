@@ -62,22 +62,16 @@ class Venue(TrackingModel):
     location = PlacesField(null=True,blank=True)
     price_details=models.CharField(("Price Details"),max_length=10,choices=PriceType.choices,default=PriceType.Single,null=True)   
     
-    promoter_user=models.ForeignKey(to=User,related_name="promoter_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    
     dresses=models.ManyToManyField(to=Dress,blank=True)
     foods=models.ManyToManyField(to=Food,blank=True)
     musics=models.ManyToManyField(to=Music,blank=True)
     ages=models.ManyToManyField(to=Age,blank=True)
-    created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    
     featured = models.BooleanField(
         ("Featured"),
         default=False,
         help_text=("Designates whether the venue is featured or not."),
-        blank=True
-    )
-    archived = models.BooleanField(
-        ("Archived"),
-        default=False,
-        help_text=("Designates whether the venue is archived or not."),
         blank=True
     )
     monday = models.BooleanField(default=True,blank=True)
@@ -110,6 +104,14 @@ class Venue(TrackingModel):
 
     email=models.EmailField(max_length=255,blank=True,null=True)
     phone=PhoneNumberField(blank=True,null=True)
+    promoter_user=models.ForeignKey(to=User,related_name="promoter_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    created_by=models.ForeignKey(to=User,related_name="created_by_user_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)
+    archived = models.BooleanField(
+        ("Archived"),
+        default=False,
+        help_text=("Designates whether the venue is archived or not."),
+        blank=True
+    )
     def __str__(self):
         return self.venue_name
         
@@ -131,7 +133,7 @@ class VenueImage(models.Model):
     is_cover=models.CharField(max_length=10,choices=ImageType.choices,default=ImageType.No,null=True)   
 
 
-class RequestVenue(models.Model):
+class RequestVenue(TrackingModel,models.Model):
     name=models.CharField(max_length=255)
     city=models.CharField(max_length=255,blank=True,null=True)
     user_id=models.ForeignKey(to=User,related_name="user_requested_venue",blank=True,null=True,default=None,on_delete=models.CASCADE)

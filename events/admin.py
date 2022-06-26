@@ -1,8 +1,9 @@
+import email
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.db import models
 from django.forms import SelectMultiple
-
+from authentication.models import User
 from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
 from events.serializers import EventSerializer
 from import_export.admin import ImportExportModelAdmin
@@ -35,7 +36,7 @@ class VenueMenuImageInline(admin.TabularInline):
 class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     inlines = [ VenueMenuImageInline,VenueImageInline, ]
     exclude=('address','latitude','longitude')
-    formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px'})}, }
+    formfield_overrides = { models.ManyToManyField: {'widget': SelectMultiple(attrs={'style':'min-width:250px;min-height:80px'})}, }
     def save_model(self, request, obj, form, change):
         try:
             obj.address = obj.location.place
@@ -67,7 +68,7 @@ class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
 
         return lint_score
 
-    showLintScore.short_description="Lint Score"
+    showLintScore.short_description="Lit Score"
     showLintScore.allow_tags = True
     def has_delete_permission(self, request, obj=None):
         return False     
@@ -98,9 +99,23 @@ class UniversityAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     list_display=("university_name","city","archived","created_at",)
     search_fields = ['university_name','city','archived','created_at']
 
+class RequestVenueAdmin(admin.ModelAdmin):
+    def has_delete_permission(self, request, obj=None):
+        return False  
+    def getEmail(self,obj):
+        user=User.objects.filter(email=obj.user_id).first()    
+        return user.email
+    def getPhone(self,obj):
+        user=User.objects.filter(email=obj.user_id).first()    
+        return user.phone_number  
+    getEmail.short_description="Email"      
+    getPhone.short_description="Phone"      
+    list_display=("name","city","getEmail","getPhone","created_at",)
+    search_fields = ['name','city','user_id__email','user_id__phone_number','created_at']
+
 admin.site.register(University,UniversityAdmin)
 admin.site.register(Venue, VenueAdmin)
-admin.site.register(RequestVenue)
+admin.site.register(RequestVenue,RequestVenueAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Dress)
 admin.site.register(Food)

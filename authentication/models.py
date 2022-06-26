@@ -83,7 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
     date_of_birth=models.DateField(blank=True,null=True)
     job_title=models.CharField(("Job Title"), max_length=100, blank=True)
     degree_title=models.CharField(("Degree Title"), max_length=100, blank=True)
-    country = models.CharField(("Country"), max_length=100, blank=True)
+    country = models.CharField(("Country"), max_length=100, blank=True,null=True)
     university=models.ForeignKey("events.University",on_delete=models.CASCADE,related_name="university",blank=True,null=True, default=None)
     email = models.EmailField(("email address"), blank=False,unique=True)
     profile_access_type=models.CharField(max_length=10,choices=ProfileAccessType.choices,default=ProfileAccessType.PUBLIC,null=True)   
