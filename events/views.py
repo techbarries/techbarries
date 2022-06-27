@@ -706,7 +706,8 @@ class VenuePopularListAPIView(ListAPIView):
         return venueCommon(self, request,user_id,popular=True, *args, **kwargs)         
 class VenueNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
-        return venueCommon(self, request,user_id,latitude,longitude, *args, **kwargs)
+        popular=False
+        return venueCommon(self, request,user_id,popular,latitude,longitude, *args, **kwargs)
 
 
 def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None, *args, **kwargs):
