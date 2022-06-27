@@ -698,12 +698,14 @@ class RequestVenueAPIView(CreateAPIView):
         return Response(res,status=status.HTTP_200_OK)
 
 class VenueListAPIView(ListAPIView):
-    def list(self, request,user_id, *args, **kwargs):
-        return venueCommon(self, request,user_id, *args, **kwargs)    
+    def list(self, request,user_id,latitude,longitude, *args, **kwargs):
+        popular=False
+        return venueCommon(self, request,user_id,popular,latitude,longitude, *args, **kwargs)    
 
 class VenuePopularListAPIView(ListAPIView):
-    def list(self, request,user_id, *args, **kwargs):
-        return venueCommon(self, request,user_id,popular=True, *args, **kwargs)         
+    def list(self, request,user_id,latitude,longitude, *args, **kwargs):
+        popular=True
+        return venueCommon(self, request,user_id,popular,latitude,longitude, *args, **kwargs)         
 class VenueNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
         popular=False

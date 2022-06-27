@@ -76,7 +76,7 @@ class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
     fieldsets=[
         (
            "Basic Info",{
-               'fields':('venue_name','description','location','price_details','featured')
+               'fields':('venue_name','description','location','price_details','featured','premium','popular')
            } 
         ),
         (

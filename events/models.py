@@ -74,6 +74,18 @@ class Venue(TrackingModel):
         help_text=("Designates whether the venue is featured or not."),
         blank=True
     )
+    premium = models.BooleanField(
+        ("Premium"),
+        default=False,
+        help_text=("Designates whether the venue is premium or not."),
+        blank=True
+    )
+    popular = models.BooleanField(
+        ("popular"),
+        default=False,
+        help_text=("Designates whether the venue is popular or not."),
+        blank=True
+    )    
     monday = models.BooleanField(default=True,blank=True)
     monday_start_time=models.TimeField(blank=True,null=True,default=datetime.now,help_text="Enter Time")
     monday_end_time=models.TimeField(blank=True,null=True,default=datetime.now,help_text="Enter Time")

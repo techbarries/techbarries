@@ -26,23 +26,6 @@ class EventUserSerializer(serializers.ModelSerializer):
     def get_friends_count(self,obj):
         friends=Friends.objects.filter(Q(sent_to_user_id=obj.id )|Q(sent_by_user_id=obj.id),status=True).all()
         return friends.count()                
-class EventSerializer(serializers.ModelSerializer):
-    event_images=EventImageSerializer(many=True,read_only=True)
-    like_count=serializers.SerializerMethodField()
-    joined_count=serializers.SerializerMethodField()
-    user=serializers.SerializerMethodField()
-    class Meta:
-        model=Event
-        fields='__all__'
-    def get_like_count(self,obj):
-        eventLikeStatus=EventStatus.objects.filter(event_id=obj.id,liked=True)
-        return eventLikeStatus.count()    
-    def get_joined_count(self,obj):
-        eventJoinedStatus=EventStatus.objects.filter(event_id=obj.id,joined=True)
-        return eventJoinedStatus.count()            
-    def get_user(self,obj):
-        serializer=EventUserSerializer(obj.user_id)
-        return serializer.data
 
 class UniversitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -137,6 +120,24 @@ class VenueSerializer(serializers.ModelSerializer):
     def get_price_range(self,obj):
         return obj.price_details                                                     
 
+class EventSerializer(serializers.ModelSerializer):
+    event_images=EventImageSerializer(many=True,read_only=True)
+    like_count=serializers.SerializerMethodField()
+    joined_count=serializers.SerializerMethodField()
+    user=serializers.SerializerMethodField()
+    venue=VenueSerializer()
+    class Meta:
+        model=Event
+        fields='__all__'
+    def get_like_count(self,obj):
+        eventLikeStatus=EventStatus.objects.filter(event_id=obj.id,liked=True)
+        return eventLikeStatus.count()    
+    def get_joined_count(self,obj):
+        eventJoinedStatus=EventStatus.objects.filter(event_id=obj.id,joined=True)
+        return eventJoinedStatus.count()            
+    def get_user(self,obj):
+        serializer=EventUserSerializer(obj.user_id)
+        return serializer.data
 class RequestVenueSerializer(serializers.ModelSerializer): 
         class Meta:
             model=RequestVenue
