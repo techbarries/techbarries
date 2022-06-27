@@ -81,11 +81,13 @@ class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
         ),
         (
            "Attractions",{
+               'classes':('collapse',),
                'fields':('dresses','foods','musics','ages')
            } 
         ),
         (
            "Bussiness Hours",{
+               'classes':('collapse',),
                'fields':
                ('monday',('monday_start_time','monday_end_time')
                ,'tuesday',('tuesday_start_time','tuesday_end_time')
@@ -98,6 +100,7 @@ class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
         ),
         (
            "Contact Info",{
+               'classes':('collapse',),
                'fields':('email','phone','promoter_user','created_by','archived')
            } 
         ),
