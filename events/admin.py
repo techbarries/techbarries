@@ -34,6 +34,7 @@ class VenueMenuImageInline(admin.TabularInline):
 
     image_preview.short_description = 'Preview'     
 class VenueAdmin(ImportExportModelAdmin,admin.ModelAdmin):
+    change_form_template="admin/events/extras/change_form.html"
     inlines = [ VenueMenuImageInline,VenueImageInline, ]
     exclude=('address','latitude','longitude')
     def save_model(self, request, obj, form, change):
