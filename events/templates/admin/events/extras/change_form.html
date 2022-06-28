@@ -76,8 +76,10 @@
          $(function(){
             $('#id_archived').change(function() {
                 if(this.checked) {
-                $("<b style='color:red'> The venue will be disabled</b>").insertAfter(this);        
                 var returnVal = confirm("Are you sure? The venue will be disabled.");
+                if(returnVal){
+                    $("<b style='color:red'> The venue will be disabled</b>").insertAfter(this);        
+                }
                 $(this).prop("checked", returnVal);
                 }else{
                     $('#id_archived').nextAll('b').remove();
