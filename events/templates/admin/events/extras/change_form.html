@@ -79,6 +79,8 @@
                 $("<b style='color:red'> The venue will be disabled</b>").insertAfter(this);        
                 var returnVal = confirm("Are you sure? The venue will be disabled.");
                 $(this).prop("checked", returnVal);
+                }else{
+                    $('#id_archived').nextAll('b').remove();
                 }
             });
             // 
