@@ -133,7 +133,7 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 serializer_user=UserSerializer(user)
                 desc="@"+serializer_user.data['first_name']+" has added you as a friend. Click to confirm"
                 details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"FRIEND_REQUEST","id":serializer.data['id'],"desc":"","action":None}
-                notification=Notification.objects.create(title="You got friend request invitation!",description=desc,redirect_to="FRIEND_PROFILE_PAGE",details=details,user_id=User.objects.get(id=request.data['sent_to_user_id']))
+                notification=Notification.objects.create(title="You got friend request invitation!",description=desc,redirect_to="FRIEND_PROFILE_PAGE",details=details,user_id=User.objects.get(id=request.data['sent_to_user_id']),created_by=user)
                 friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
                 friendRequest.notification=notification
                 friendRequest.save()
