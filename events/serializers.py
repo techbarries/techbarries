@@ -143,12 +143,12 @@ class EventSerializer(serializers.ModelSerializer):
     def get_venue(self,obj):
         serializer=VenueSerializer(obj.venue)
         return serializer.data  
-    def get_event_start(self,obj):
+    def get_event_end(self,obj):
         formated=None
         if obj.event_end_date and  obj.event_end_time is not None:
             formated=obj.event_end_time.strftime("%I:%M %p")+","+obj.event_end_date.strftime("%a,%m %b,%Y")
         return formated  
-    def get_event_end(self,obj):
+    def get_event_start(self,obj):
         formated=None
         if obj.event_start_date and  obj.event_start_time is not None:
             formated=obj.event_start_time.strftime("%I:%M %p")+","+obj.event_start_date.strftime("%a,%m %b,%Y")
