@@ -129,9 +129,6 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model=Event
         fields='__all__'
-    extra_kwargs={
-        "venue":{"required": False}
-    }    
     def get_like_count(self,obj):
         eventLikeStatus=EventStatus.objects.filter(event_id=obj.id,liked=True)
         return eventLikeStatus.count()    
