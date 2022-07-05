@@ -125,10 +125,13 @@ class EventSerializer(serializers.ModelSerializer):
     like_count=serializers.SerializerMethodField()
     joined_count=serializers.SerializerMethodField()
     user=serializers.SerializerMethodField()
-    venue=VenueSerializer()
+    venue=serializers.SerializerMethodField()
     class Meta:
         model=Event
         fields='__all__'
+    extra_kwargs={
+        "venue":{"required": False}
+    }    
     def get_like_count(self,obj):
         eventLikeStatus=EventStatus.objects.filter(event_id=obj.id,liked=True)
         return eventLikeStatus.count()    
@@ -138,6 +141,9 @@ class EventSerializer(serializers.ModelSerializer):
     def get_user(self,obj):
         serializer=EventUserSerializer(obj.user_id)
         return serializer.data
+    def get_venue(self,obj):
+        serializer=VenueSerializer(obj.venue)
+        return serializer.data    
 class RequestVenueSerializer(serializers.ModelSerializer): 
         class Meta:
             model=RequestVenue
