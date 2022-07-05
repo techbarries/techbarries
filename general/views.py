@@ -75,7 +75,7 @@ class NotificationListAPIView(ListAPIView):
 class FaqListApiView(ListAPIView):
     def list(self, request, *args, **kwargs):
         faq=Faq.objects.all()
-        if faq is None:
+        if faq is None or faq.count() < 1:
             res={"status":False,"message":"Faq not found","data":{}}
             return Response(res)
         seriliazer=FaqSerializer(faq,many=True)
