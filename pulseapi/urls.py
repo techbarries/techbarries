@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/card/', include("authentication.user_card_billing_urls")),
     path('api/notification/', include("general.urls")),
     path('api/friend/', include("general.friends_urls")),
+    path('api/faq/', include("general.faq_urls")),
     path('api/otp/', include("authentication.otp_urls")),
     path('api/event/', include("events.urls")),
     path('api/payment/', include("payments.urls")),

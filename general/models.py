@@ -38,4 +38,8 @@ class InviteFriends(TrackingModel):
     phone_number = models.CharField(("phone number"), max_length=50, blank=True)
 
 
-        
+class Faq(TrackingModel):
+    title=models.CharField(max_length=255)
+    description = models.TextField(("description"),default=None,null=True,blank=True)
+    def __str__(self):
+        return self.title

@@ -7,8 +7,8 @@ from authentication.models import Device, User
 from authentication.serializers import DeviceSerializer, UserSerializer
 from events.models import EventStatus
 from fcm import Fcm
-from general.models import Friends, InviteFriends, Notification
-from general.serializers import FriendsSerializer, InviteFriendsSerializer, NotificationSerializer
+from general.models import Faq, Friends, InviteFriends, Notification
+from general.serializers import FaqSerializer, FriendsSerializer, InviteFriendsSerializer, NotificationSerializer
 from django.db.models import Q
 from authentication.twilio import Twilio
 from rest_framework.views import APIView
@@ -72,6 +72,15 @@ class NotificationListAPIView(ListAPIView):
             res={"status":True,"message":"notifications not found","data":{"notifications":[]}}
         return Response(res) 
 
+class FaqListApiView(ListAPIView):
+    def list(self, request, *args, **kwargs):
+        faq=Faq.objects.all()
+        if faq is None:
+            res={"status":False,"message":"Faq not found","data":{}}
+            return Response(res)
+        seriliazer=FaqSerializer(faq,many=True)
+        res={"status":True,"message":"faqs found","data":{"faqs":seriliazer.data}}
+        return Response(res) 
 class NotificationMarkReadAPIView(ListAPIView):
     def list(self, request,user_id,id=None, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
@@ -133,7 +142,7 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 serializer_user=UserSerializer(user)
                 desc="@"+serializer_user.data['first_name']+" has added you as a friend. Click to confirm"
                 details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"FRIEND_REQUEST","id":serializer.data['id'],"desc":"","action":None}
-                notification=Notification.objects.create(title="You got friend request invitation!",description=desc,redirect_to="FRIEND_PROFILE_PAGE",details=details,user_id=User.objects.get(id=request.data['sent_to_user_id']),created_by=user)
+                notification=Notification.objects.create(title="New friend request!",description=desc,redirect_to="FRIEND_PROFILE_PAGE",details=details,user_id=User.objects.get(id=request.data['sent_to_user_id']),created_by=user)
                 friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
                 friendRequest.notification=notification
                 friendRequest.save()
@@ -143,7 +152,7 @@ class CreateFriendRequestAPIView(CreateAPIView):
                     for device in device_serializer.data:
                         if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                             fcm=Fcm()
-                            fcm.send(device['fcm_token'],"You got friend request invitation!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
+                            fcm.send(device['fcm_token'],"New friend request!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
