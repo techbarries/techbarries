@@ -126,6 +126,8 @@ class EventSerializer(serializers.ModelSerializer):
     joined_count=serializers.SerializerMethodField()
     user=serializers.SerializerMethodField()
     venue=serializers.SerializerMethodField()
+    event_start=serializers.SerializerMethodField()
+    event_end=serializers.SerializerMethodField()
     class Meta:
         model=Event
         fields='__all__'
@@ -140,7 +142,17 @@ class EventSerializer(serializers.ModelSerializer):
         return serializer.data
     def get_venue(self,obj):
         serializer=VenueSerializer(obj.venue)
-        return serializer.data    
+        return serializer.data  
+    def get_event_start(self,obj):
+        formated=None
+        if obj.event_end_date and  obj.event_end_time is not None:
+            formated=obj.event_end_time.strftime("%I:%M %p")+","+obj.event_end_date.strftime("%a,%m %b,%Y")
+        return formated  
+    def get_event_end(self,obj):
+        formated=None
+        if obj.event_start_date and  obj.event_start_time is not None:
+            formated=obj.event_start_time.strftime("%I:%M %p")+","+obj.event_start_date.strftime("%a,%m %b,%Y")
+        return formated
 class RequestVenueSerializer(serializers.ModelSerializer): 
         class Meta:
             model=RequestVenue
