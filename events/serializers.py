@@ -141,8 +141,12 @@ class EventSerializer(serializers.ModelSerializer):
         serializer=EventUserSerializer(obj.user_id)
         return serializer.data
     def get_venue(self,obj):
-        serializer=VenueSerializer(obj.venue)
-        return serializer.data  
+        venue=None
+        venueObj=Venue.objects.filter(id=obj.venue.id).first()
+        if venueObj is not None:
+            serializer=VenueSerializer(venueObj)
+            venue=serializer.data
+        return venue
     def get_event_end(self,obj):
         formated=None
         if obj.event_end_date and  obj.event_end_time is not None:
