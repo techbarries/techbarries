@@ -142,10 +142,11 @@ class EventSerializer(serializers.ModelSerializer):
         return serializer.data
     def get_venue(self,obj):
         venue=None
-        venueObj=Venue.objects.filter(id=obj.venue.id).first()
-        if venueObj is not None:
-            serializer=VenueSerializer(venueObj)
-            venue=serializer.data
+        if obj.venue is not None:
+            venueObj=Venue.objects.filter(id=obj.venue.id).first()
+            if venueObj is not None:
+                serializer=VenueSerializer(venueObj)
+                venue=serializer.data
         return venue
     def get_event_end(self,obj):
         formated=None
