@@ -36,12 +36,14 @@ class CreatePaymentIntentAPIView(APIView):
 
 
 class CreateEventTransactionAPIView(APIView):
-    """event_id, user_id, transaction_id, payment_status, bottle_fee, cover_fee, no_of_tickets, processing_fee, pulse_service_charges
+    """event_id, user_id, transaction_id, payment_status,payment_method,currency, bottle_fee, cover_fee, no_of_tickets, processing_fee, pulse_service_charges
     {
     "transaction_id": "pi_3LJLskFHPjA97y331KajVLja",
     "event_id":1,
     "user_id":2,
     "payment_status":true,
+    "payment_method":"Stripe",
+    "currency":"CAD",
     "bottle_fee":20,
     "cover_fee":12,
     "no_of_tickets":1,

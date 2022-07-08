@@ -11,6 +11,8 @@ class EventTransaction(TrackingModel):
     transaction_id=models.TextField()
     payment_status = models.BooleanField(("Is Paid"),default=False,help_text=("Designates whether the payment is successfull."),blank=True)
     bottle_fee=models.IntegerField(default=0,blank=True,null=True)
+    payment_method=models.CharField(max_length=255,blank=True,null=True)
+    currency=models.CharField(max_length=255,blank=True,null=True)
     cover_fee=models.IntegerField(default=0,blank=True,null=True)
     no_of_tickets=models.IntegerField(default=1,blank=True,null=True)
     processing_fee=models.IntegerField(default=0,blank=True,null=True)
