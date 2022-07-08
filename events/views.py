@@ -14,6 +14,7 @@ from django.db.models import Q
 from fcm import Fcm
 
 from general.models import Notification
+from payments.models import EventTransaction
 
 # Create your views here.
 
@@ -181,6 +182,12 @@ class EventDetailAPIView(APIView):
                         status_list['not_going']=True                        
                     if eventStatusByUser.paid:
                         status_list['paid']=True
+                        # transaction
+                        eventTransactionByUser=EventTransaction.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        event["transaction_id"]=None
+                        if eventTransactionByUser is not None:
+                            event["transaction_id"]=eventTransactionByUser.transaction_id
+ 
                     if eventStatusByUser.guest_list:
                         status_list['guest_list']=True
                     if eventStatusByUser.invited:
@@ -199,10 +206,10 @@ class EventDetailAPIView(APIView):
                 return Response(res)
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"checked_in","checked_out","pinned","un_pinned","joined","going","not_going","liked","un_liked",leave"
+    \n"checked_in","checked_out","pinned","un_pinned","paid","joined","going","not_going","liked","un_liked",leave"
     """
     def get(self,request,event_id,user_id,status):
-        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","joined","going","not_going"]
+        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","paid","joined","going","not_going"]
         if status in status_list:
             if status=='joined':
                 event=Event.objects.filter(id=event_id).first()
@@ -226,7 +233,9 @@ class EventStatusAPIView(APIView):
                 if status == "un_liked":
                     eventStatus.liked=False 
                 if status == "joined":
-                    eventStatus.joined=True   
+                    eventStatus.joined=True 
+                if status == "paid":
+                    eventStatus.paid=True                       
                 if status == "going":
                     eventStatus.going=True 
                     eventStatus.not_going=False
@@ -250,6 +259,8 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,liked=True)
                 if status == "joined":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,joined=True)
+                if status == "paid":
+                    EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,paid=True)
                 if status == "going":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,going=True,not_going=False)
                 if status == "not_going":
@@ -446,6 +457,12 @@ class EventListAPIView(ListAPIView):
                         status_list['not_going']=True                        
                     if eventStatusByUser.paid:
                         status_list['paid']=True
+                        # transaction
+                        eventTransactionByUser=EventTransaction.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        event["transaction_id"]=None
+                        if eventTransactionByUser is not None:
+                            event["transaction_id"]=eventTransactionByUser.transaction_id
+                         
                     if eventStatusByUser.guest_list:
                         status_list['guest_list']=True
                     if eventStatusByUser.invited:
@@ -546,6 +563,12 @@ class EventNearMeListAPIView(ListAPIView):
                         status_list['not_going']=True            
                     if eventStatusByUser.paid:
                         status_list['paid']=True
+                        # transaction
+                        eventTransactionByUser=EventTransaction.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        event["transaction_id"]=None
+                        if eventTransactionByUser is not None:
+                            event["transaction_id"]=eventTransactionByUser.transaction_id
+                         
                     if eventStatusByUser.guest_list:
                         status_list['guest_list']=True
                     if eventStatusByUser.invited:
@@ -805,6 +828,12 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                             status_list['liked']=True    
                         if eventStatusByUser.paid:
                             status_list['paid']=True
+                        # transaction
+                        eventTransactionByUser=EventTransaction.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        event["transaction_id"]=None
+                        if eventTransactionByUser is not None:
+                            event["transaction_id"]=eventTransactionByUser.transaction_id
+                             
                         if eventStatusByUser.guest_list:
                             status_list['guest_list']=True
                         if eventStatusByUser.invited:
@@ -929,6 +958,12 @@ class VenueDetailAPIView(APIView):
                         status_list['liked']=True    
                     if eventStatusByUser.paid:
                         status_list['paid']=True
+                        # transaction
+                        eventTransactionByUser=EventTransaction.objects.filter(user_id=user_id,event_id=event['id']).first()    
+                        event["transaction_id"]=None
+                        if eventTransactionByUser is not None:
+                            event["transaction_id"]=eventTransactionByUser.transaction_id
+                         
                     if eventStatusByUser.guest_list:
                         status_list['guest_list']=True
                     if eventStatusByUser.invited:

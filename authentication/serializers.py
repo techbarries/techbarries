@@ -7,6 +7,7 @@ from events.models import EventStatus
 from general.models import Friends
 from events.serializers import UniversitySerializer
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 class PulseUserSerializer(serializers.ModelSerializer):
     university=UniversitySerializer(read_only=True)
@@ -86,6 +87,13 @@ class UserSerializer(serializers.ModelSerializer):
 class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model=Device
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('user_id', 'fcm_token'),
+                message=_("The device already exists for current user.")
+            )
+        ]
         fields='__all__'
 class UserCardBillingSerializer(serializers.ModelSerializer):
     class Meta:
