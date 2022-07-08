@@ -146,7 +146,7 @@ class CreateFriendRequestAPIView(CreateAPIView):
                 friendRequest=Friends.objects.filter(pk=serializer.data['id']).first()
                 friendRequest.notification=notification
                 friendRequest.save()
-                sentToUserDevices=Device.objects.filter(user_id=request.data['sent_to_user_id'])
+                sentToUserDevices=Device.objects.filter(user_id=request.data['sent_to_user_id']).all()
                 if sentToUserDevices.count()>0:
                     device_serializer=DeviceSerializer(sentToUserDevices,many=True)
                     for device in device_serializer.data:

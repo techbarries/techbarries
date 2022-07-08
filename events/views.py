@@ -53,7 +53,7 @@ class CreateEventAPIView(CreateAPIView):
                     details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":"","action":None}
                     Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest),created_by=user)
                     
-                    sentToUserDevices=Device.objects.filter(user_id=guest)
+                    sentToUserDevices=Device.objects.filter(user_id=guest).all()
                     if sentToUserDevices.count()>0:
                         device_serializer=DeviceSerializer(sentToUserDevices,many=True)
                         for device in device_serializer.data:
@@ -323,7 +323,7 @@ class EventShareAPIView(APIView):
                     res={"status":False,"message":"To User not found","data":{}}
                     return Response(res)    
                 Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=toUser),created_by=user)
-                sentToUserDevices=Device.objects.filter(user_id=toUser)
+                sentToUserDevices=Device.objects.filter(user_id=toUser).all()
                 if sentToUserDevices.count()>0:
                     device_serializer=DeviceSerializer(sentToUserDevices,many=True)
                     for device in device_serializer.data:
