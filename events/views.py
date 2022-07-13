@@ -611,6 +611,16 @@ class UpcomingEventListAPIView(ListAPIView):
             res={"status":False,"message":"Not found","data":{}}
         return Response(res)
 
+class EventArchiveAPIView(ListAPIView):
+    def list(self, request,event_id, *args, **kwargs):
+        event=Event.objects.filter(id=event_id).first()
+        if event is not None:
+            event.archived=True
+            event.save()
+            res={"status":True,"message":"Event archived successfully","data":{}}
+            return Response(res)
+        res={"status":False,"message":"Event Not found","data":{}}    
+        return Response(res)
 class EventNotificaionStatusAPIView(ListAPIView):
     """
     Available statuses
