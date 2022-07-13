@@ -206,10 +206,10 @@ class EventDetailAPIView(APIView):
                 return Response(res)
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"checked_in","checked_out","pinned","un_pinned","paid","joined","going","not_going","liked","un_liked",leave"
+    \n"checked_in","checked_out","pinned","un_pinned","paid","joined","un_joined","going","not_going","liked","un_liked",leave"
     """
     def get(self,request,event_id,user_id,status):
-        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","paid","joined","going","not_going"]
+        status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","paid","joined","un_joined","going","not_going"]
         if status in status_list:
             if status=='joined':
                 event=Event.objects.filter(id=event_id).first()
@@ -234,6 +234,8 @@ class EventStatusAPIView(APIView):
                     eventStatus.liked=False 
                 if status == "joined":
                     eventStatus.joined=True 
+                if status == "un_joined":
+                    eventStatus.joined=False     
                 if status == "paid":
                     eventStatus.paid=True                       
                 if status == "going":
@@ -349,10 +351,10 @@ class EventShareAPIView(APIView):
 
 class VenueStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"joined","liked","un_liked""
+    \n"joined","un_joined","liked","un_liked""
     """
     def get(self,request,venue_id,user_id,status):
-        status_list = ["liked","un_liked","joined"]
+        status_list = ["liked","un_liked","joined","un_joined"]
         if status in status_list:
             venueStatus=VenueStatus.objects.filter(user_id=user_id,venue_id=venue_id).first()
             if venueStatus is not None:
@@ -361,7 +363,9 @@ class VenueStatusAPIView(APIView):
                 if status == "un_liked":
                     venueStatus.liked=False 
                 if status == "joined":
-                    venueStatus.joined=True   
+                    venueStatus.joined=True
+                if status == "un_joined":
+                    venueStatus.joined=False       
                 venueStatus.save();    
                 res={"status":True,"message":"Venue status updated successfully","data":{}}
                 return Response(res)
