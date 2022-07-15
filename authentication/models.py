@@ -115,6 +115,7 @@ class User(AbstractBaseUser, PermissionsMixin,TrackingModel):
         return ""
 
 class Device(TrackingModel):
+    device_id=models.TextField(("Device Id"),default=None,null=True,blank=True)
     device_name=models.CharField(max_length=255,blank=True)
     fcm_token=models.CharField(max_length=255,blank=True)
     os=models.CharField(max_length=255,blank=True) 

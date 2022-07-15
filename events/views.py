@@ -495,7 +495,7 @@ class EventNearMeListAPIView(ListAPIView):
             return Response(res)
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE archived=0 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE archived=0 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 100  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         events=Event.objects.raw(query)
         if len(events)> 0:
             serializer = EventSerializer(events, many=True)
@@ -758,7 +758,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
     if latitude is not None and longitude is not None:
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where archived=0  group by id  having distance < 50  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where archived=0  group by id  having distance < 100  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         venues=Venue.objects.raw(query)
         venueCount=len(venues)
     elif popular:
