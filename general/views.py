@@ -308,6 +308,18 @@ class FriendRequestStatusAPIView(ListAPIView):
                     notification.details=details
                     notification.save()
             friendRequest.save()
+            sentToUserDevices=Device.objects.filter(user_id=friendRequest.sent_by_user_id.id).all()
+            if sentToUserDevices.count()>0:
+                user=User.objects.filter(id=friendRequest.sent_to_user_id.id).first()
+                desc="Friend request successfully accepted you sent."
+                if user.first_name is not None and  len(user.first_name)>0:
+                    desc="Friend request sent to @"+user.first_name+" is accepted."
+                device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                for device in device_serializer.data:
+                    if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                        fcm=Fcm()
+                        fcm.send(device['fcm_token'],"Friend request accepted",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
+        
             res={"status":True,"message":"friendRequest accepted successfully","data":{}}
         elif status=='decline':
             # 
@@ -320,6 +332,17 @@ class FriendRequestStatusAPIView(ListAPIView):
                         details.update({"desc":"You have declined friend request","action":"declined"})
                     notification.details=details
                     notification.save()
+            sentToUserDevices=Device.objects.filter(user_id=friendRequest.sent_by_user_id.id).all()
+            if sentToUserDevices.count()>0:
+                user=User.objects.filter(id=friendRequest.sent_to_user_id.id).first()
+                desc="Friend request declined you sent."
+                if user.first_name is not None and  len(user.first_name)>0:
+                    desc="Friend request sent to @"+user.first_name+" is declined."
+                device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                for device in device_serializer.data:
+                    if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                        fcm=Fcm()
+                        fcm.send(device['fcm_token'],"Friend request declined",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})        
             friendRequest.delete()
             res={"status":True,"message":"friendRequest declined successfully","data":{}}
         elif status=='un_friend':
@@ -339,6 +362,17 @@ class FriendRequestStatusAPIView(ListAPIView):
                     notification.details=details
                     notification.save()
             friendRequest.save()
+            sentToUserDevices=Device.objects.filter(user_id=friendRequest.sent_by_user_id.id).all()
+            if sentToUserDevices.count()>0:
+                user=User.objects.filter(id=friendRequest.sent_to_user_id.id).first()
+                desc="One of your friend has un-friend you."
+                if user.first_name is not None and  len(user.first_name)>0:
+                    desc="One of your friend  @"+user.first_name+" has un-friend you."
+                device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                for device in device_serializer.data:
+                    if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                        fcm=Fcm()
+                        fcm.send(device['fcm_token'],"Friend un-friend",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})             
             res={"status":True,"message":"friendRequest un_friend successfully","data":{}}    
         else:
             res={"status":False,"message":"provide valid status,'accept/decline/un_friend'","data":{}}
