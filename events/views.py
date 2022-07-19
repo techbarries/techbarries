@@ -37,7 +37,7 @@ class CreateEventAPIView(CreateAPIView):
                     eventImage.save()
             res.update(data=serializer.data)
             # create event status
-            EventStatus.objects.create(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=serializer.data['user_id']) ,hosted=True)
+            EventStatus.objects.create(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=serializer.data['user_id']) ,hosted=True,invited=True)
             # invite guests
             guests=serializer.data['guests']
             date=serializer.data['event_start_date']
@@ -246,7 +246,8 @@ class EventStatusAPIView(APIView):
                     eventStatus.joined=False
                     eventStatus.not_going=True                                                                              
                 eventStatus.save();    
-                res={"status":True,"message":"event status updated successfully","data":{}}
+                # res={"status":True,"message":"event status updated successfully","data":{}}
+                res={"status":True,"message":"event "+status+" successfully","data":{}}
                 return Response(res)
             else:
                 if status == "checked_in":
@@ -269,7 +270,7 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,going=False,joined=False,not_going=True)            
                 if status == "un_liked":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),liked=False)    
-                res={"status":True,"message":"event status created successfully","data":{}}
+                res={"status":True,"message":"event "+status+" successfully","data":{}}
                 return Response(res)
         elif status=='leave':
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
@@ -367,7 +368,7 @@ class VenueStatusAPIView(APIView):
                 if status == "un_joined":
                     venueStatus.joined=False       
                 venueStatus.save();    
-                res={"status":True,"message":"Venue status updated successfully","data":{}}
+                res={"status":True,"message":"Venue "+status+" successfully","data":{}}
                 return Response(res)
             else:
                 if status == "liked":
@@ -376,7 +377,7 @@ class VenueStatusAPIView(APIView):
                     VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id) ,joined=True)
                 if status == "un_liked":
                     VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id),liked=False)    
-                res={"status":True,"message":"Venue status created successfully","data":{}}
+                res={"status":True,"message":"Venue "+status+" successfully","data":{}}
                 return Response(res)
         else:
             res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
