@@ -22,7 +22,7 @@ class EventUserSerializer(serializers.ModelSerializer):
         fields=('id','uid','user_token','username','first_name','last_name','profile_picture_url','profile_picture_image','is_active','phone_number','date_of_birth','job_title','degree_title','country','university','email','event_count','friends_count','profile_access_type','user_type')
     def get_event_count(self,obj):
         # eventStatus=EventStatus.objects.filter(user_id=obj.id,hosted=True)
-        events=Event.objects.filter(user_id=obj.id).all()
+        events=Event.objects.filter(user_id=obj.id,archived=False).all()
         return events.count()
     def get_friends_count(self,obj):
         friends=Friends.objects.filter(Q(sent_to_user_id=obj.id )|Q(sent_by_user_id=obj.id),status=True).all()
