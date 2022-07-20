@@ -496,12 +496,16 @@ class EventNearMeListAPIView(ListAPIView):
             return Response(res)
         latitude = latitude
         longitude = longitude 
-        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE archived=0 and access_type='PUBLIC' and event_end_date>= date() group by id  having distance < 100  ORDER BY distance ASC " % ( latitude, latitude, longitude)
+        query= "SELECT id,access_type,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event WHERE archived=0  and event_end_date>= date() group by id  having distance < 100  ORDER BY distance ASC " % ( latitude, latitude, longitude)
         events=Event.objects.raw(query)
         if len(events)> 0:
             serializer = EventSerializer(events, many=True)
             events_list=[]
             for event in serializer.data:
+                if event["access_type"] == "PRIVATE":
+                    allowedCount=EventStatus.objects.filter((Q(hosted=True) | Q(invited=True)| Q(paid=True)| Q(joined=True)),user_id=user_id,event_id=event['id']).count()
+                    if allowedCount <= 0:
+                        continue
                 # guest user's details
                 if len(event['guests'])>0:
                     guestUsers=[];
