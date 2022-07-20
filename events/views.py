@@ -85,6 +85,37 @@ class CreateEventAPIView(CreateAPIView):
                     eventImage=EventImage.objects.create(event=Event.objects.get(id=serializer.data['id']),image=image)
                     eventImage.save()
             res.update(data=serializer.data)
+            # invite guests
+            guests=serializer.data['guests']
+            date=serializer.data['event_start_date']
+            if date:
+                cDate=datetime.strptime(date,'%Y-%m-%d')
+                date=cDate.strftime('%A, %B %d, %Y')
+            for guest in guests:
+                alreadyInvitedCount=EventStatus.objects.filter(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=guest),invited=True).count()
+                if alreadyInvitedCount > 0:
+                    continue
+                eventStatus=EventStatus.objects.filter(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=guest)).first() 
+                if eventStatus is not None:
+                    eventStatus.invited=True
+                    eventStatus.save()
+                else:    
+                    EventStatus.objects.create(event_id=Event.objects.get(id=serializer.data['id']),user_id= User.objects.get(id=guest) ,invited=True)
+                #notification
+                user=User.objects.filter(pk=serializer.data['user_id']).first()
+                if user is not None:
+                    serializer_user=UserSerializer(user)
+                    desc="You have been invited to the event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
+                    details={"has_button":True,"button_count":2,"positive_button":"Accept","negative_button":"Decline","type":"EVENT_INVITE","id":serializer.data['id'],"desc":"","action":None}
+                    Notification.objects.create(title="You got invitation!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest),created_by=user)
+                    
+                    sentToUserDevices=Device.objects.filter(user_id=guest).all()
+                    if sentToUserDevices.count()>0:
+                        device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                        for device in device_serializer.data:
+                            if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                                fcm=Fcm()
+                                fcm.send(device['fcm_token'],"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)        
