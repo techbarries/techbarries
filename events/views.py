@@ -240,15 +240,61 @@ class EventStatusAPIView(APIView):
     \n"checked_in","checked_out","pinned","un_pinned","paid","joined","un_joined","going","not_going","liked","un_liked",leave"
     """
     def get(self,request,event_id,user_id,status):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        event=Event.objects.filter(id=event_id).first()
+        if event is None:
+            res={"status":False,"message":"Event not found","data":{}}
+            return Response(res)
         status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","paid","joined","un_joined","going","not_going"]
         if status in status_list:
             if status=='joined':
-                event=Event.objects.filter(id=event_id).first()
-                if event is not None:
-                    serializer=EventSerializer(event)
-                    if serializer.data['joined_count']>=serializer.data['open_guests_list']:
-                        res={"status":False,"message":"Can't join.Open guests list full","data":{}}
-                        return Response(res)
+                serializer=EventSerializer(event)
+                if serializer.data['joined_count']>=serializer.data['open_guests_list']:
+                    res={"status":False,"message":"Can't join.Open guests list full","data":{}}
+                    return Response(res)
+                joinedCount=EventStatus.objects.filter(event_id=event_id,joined=True).count()
+                if joinedCount >0:
+                    desc="A new user and "+str(joinedCount)+" other are going to your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" and "+str(joinedCount)+" other are going to your event '"+ event.name +"'"
+                else:
+                    desc="A new user is going to your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" is going to your event '"+ event.name +"'"        
+                # send notificaion to host
+                details={"has_button":False,"id":event.id}
+                Notification.objects.create(title=event.name+" new Join",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=event.user_id.id))
+                sentToUserDevices=Device.objects.filter(user_id=event.user_id.id).all()
+                if sentToUserDevices.count()>0:
+                    device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in device_serializer.data:
+                        if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                            fcm=Fcm()
+                            fcm.send(device['fcm_token'],event.name+" new Join",desc,{"redirect_to":"EVENT_PAGE"})    
+            if status=="checked_in":
+                checkedInCount=EventStatus.objects.filter(event_id=event_id,checked_in=True).count()
+                if checkedInCount>0:
+                    desc="A new user and "+str(checkedInCount)+" have checked in to your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" and "+str(checkedInCount)+" have checked in to your event '"+ event.name +"'"
+                else:
+                    desc="A new user have checked in to your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" have checked in to your event '"+ event.name +"'"
+                    # send notificaion to host
+                details={"has_button":False,"id":event.id}
+                Notification.objects.create(title=event.name+" Checked In",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=event.user_id.id))
+                sentToUserDevices=Device.objects.filter(user_id=event.user_id.id).all()
+                if sentToUserDevices.count()>0:
+                    device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in device_serializer.data:
+                        if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                            fcm=Fcm()
+                            fcm.send(device['fcm_token'],event.name+" Checked In",desc,{"redirect_to":"EVENT_PAGE"})                
+
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
             if eventStatus is not None:
                 if status == "checked_in":
