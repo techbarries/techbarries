@@ -185,6 +185,8 @@ class Event(TrackingModel):
         help_text=("Designates whether the event is archived or not."),
         blank=True
     )
+    reminder_sent = models.BooleanField(("Event reminder sent"),default=False,help_text=("Designates whether the event reminder sent to users."),blank=True)
+    event_start_reminder_sent = models.BooleanField(("Event start reminder sent"),default=False,help_text=("Designates whether the event start reminder sent to host."),blank=True)
     user_id=models.ForeignKey(to=User,related_name="user_created_event",blank=True,null=True,default=None,on_delete=models.CASCADE)
     created_by=models.ForeignKey(to=User,related_name="created_by_event_user",blank=True,null=True,default=None,on_delete=models.CASCADE)
 
