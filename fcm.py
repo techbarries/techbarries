@@ -14,7 +14,8 @@ class Fcm():
         
         body = {
           'notification': {'title': title,
-                            'body': body
+                            'body': body,
+                            'icon':"https://pulse-api-bucket.s3.amazonaws.com/static/72+x+72.png"
                           },
           'to':
               deviceToken,
