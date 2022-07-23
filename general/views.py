@@ -5,10 +5,10 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView,ListAPIView
 from authentication.models import Device, User
 from authentication.serializers import DeviceSerializer, UserSerializer
-from events.models import EventStatus
+from events.models import Event, EventStatus
 from fcm import Fcm
 from general.models import Faq, Friends, InviteFriends, Notification
-from general.serializers import FaqSerializer, FriendsSerializer, InviteFriendsSerializer, NotificationSerializer
+from general.serializers import FaqSerializer, FriendsSerializer, InviteFriendsSerializer, NotificationSerializer, ReportSerializer
 from django.db.models import Q
 from authentication.twilio import Twilio
 from rest_framework.views import APIView
@@ -377,3 +377,56 @@ class FriendRequestStatusAPIView(ListAPIView):
         else:
             res={"status":False,"message":"provide valid status,'accept/decline/un_friend'","data":{}}
         return Response(res)
+
+
+# Create your views here.
+class CreateReportAPIView(CreateAPIView):
+    """
+    Possible values for report_type
+    'Users','Events','Venues','Ticket',
+
+    report_type_id is the selected instance id i.e User=>user_id
+    
+    Possible values for report_reason
+    'Unprofessional','Fake','Scam','Spam','False_Information','Nudity','Underage_Drinking','Violence','Hate','Dangerous_Organization','Bullying','Illegal','Suicide'
+    """
+    serializer_class=ReportSerializer
+    def post(self,request):
+        serializer=self.serializer_class(data=request.data)
+        res={"status":True,"message":"Reported successfully","data":{}}
+        if serializer.is_valid():
+            serializer.save()
+            res.update(data=serializer.data)
+            #notificaion
+            data=serializer.data 
+            if data["report_type"]=="Users":
+                if data["report_type_id"] is not None:
+                    user=User.objects.filter(id=data["report_type_id"]).first()
+                    if user is not None:
+                        details={"has_button":False,"id":user.id}
+                        desc="Your account has been reported for "+data["report_reason"]+" reason"
+                        Notification.objects.create(title="Account Reported",description=desc,redirect_to="Report_PAGE",details=details,user_id=User.objects.get(id=user.id))
+                        sentToUserDevices=Device.objects.filter(user_id=user.id).all()
+                        if sentToUserDevices.count()>0:
+                            device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                            for device in device_serializer.data:
+                                if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                                    fcm=Fcm()
+                                    fcm.send(device['fcm_token'],"Account Reported",desc,{"redirect_to":"Report_PAGE"})
+            if data["report_type"]=="Events":
+                if data["report_type_id"] is not None:
+                    event=Event.objects.filter(id=data["report_type_id"]).first()
+                    details={"has_button":False,"id":event.user_id.id}
+                    desc="Your Event '"+event.name+"' was reported for "+data["report_reason"]+" reason. Please make changes immediately."
+                    Notification.objects.create(title= event.name+" - Event Reported",description=desc,redirect_to="Report_PAGE",details=details,user_id=User.objects.get(id=event.user_id.id))
+                    sentToUserDevices=Device.objects.filter(user_id=event.user_id.id).all()
+                    if sentToUserDevices.count()>0:
+                        device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                        for device in device_serializer.data:
+                            if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                                fcm=Fcm()
+                                fcm.send(device['fcm_token'],event.name+" - Event Reported",desc,{"redirect_to":"Report_PAGE"})
+
+            return Response(res,status=status.HTTP_200_OK)
+        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        return Response(res,status=status.HTTP_200_OK)

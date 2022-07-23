@@ -43,3 +43,34 @@ class Faq(TrackingModel):
     description = models.TextField(("description"),default=None,null=True,blank=True)
     def __str__(self):
         return self.title
+
+class Report(TrackingModel):
+    class ReportType(models.TextChoices):
+        Users = 'Users', ('Users')
+        Events = 'Events', ('Events')
+        Venues = 'Venues', ('Venues')
+        Ticket = 'Ticket', ('Ticket')
+    class ReportReason(models.TextChoices):
+        Unprofessional = 'Unprofessional', ('Unprofessional / bad service')        
+        Fake = 'Fake', ('Fake / impersonation')        
+        Scam = 'Scam', ('Scam or fraud')        
+        Spam = 'Spam', ('Spam')        
+        False_Information = 'False_Information', ('False Information')        
+        Nudity = 'Nudity', ('Nudity or sexual activity')        
+        Underage_Drinking = 'Underage_Drinking', ('Underage drinking')        
+        Violence = 'Violence', ('Violence, drugs or dangerous organization')        
+        Hate = 'Hate', ('Hate or terrorist groups')        
+        Dangerous_Organization = 'Dangerous_Organization', ('Violence, drugs or dangerous organization')        
+        Bullying = 'Bullying', ('Bullying or harassment')        
+        Illegal = 'Illegal', ('Illegal/ criminal activities')        
+        Suicide = 'Suicide', ('Suicide or self-injury')        
+
+    report_type=models.CharField(("Report Type"),max_length=100,choices=ReportType.choices,default=ReportType.Users)   
+    report_type_id=models.IntegerField(("ID"),blank=True,null=True)   
+    report_reason=models.CharField(("Report Reason"),max_length=100,choices=ReportReason.choices,default=ReportReason.Fake)   
+    description = models.TextField(("Description"),default=None,null=True,blank=True)
+    reported_by_user_id=models.ForeignKey(to=User,related_name="reported_by_user_id",blank=True,null=True,default=None,on_delete=models.CASCADE)
+
+    def __str__(self):
+            return self.report_type
+    

@@ -3,7 +3,7 @@ from unittest.util import _MAX_LENGTH
 from rest_framework import serializers
 from authentication.serializers import UserSerializer
 
-from general.models import Faq, Friends, InviteFriends, Notification
+from general.models import Faq, Friends, InviteFriends, Notification, Report
 
 class NotificationSerializer(serializers.ModelSerializer):
     user_id=UserSerializer()
@@ -25,3 +25,9 @@ class InviteFriendsSerializer(serializers.ModelSerializer):
     class Meta:
         model=InviteFriends
         fields='__all__'
+
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Report
+        fields='__all__'
+
