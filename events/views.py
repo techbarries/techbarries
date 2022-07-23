@@ -293,7 +293,28 @@ class EventStatusAPIView(APIView):
                     for device in device_serializer.data:
                         if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                             fcm=Fcm()
-                            fcm.send(device['fcm_token'],event.name+" Checked In",desc,{"redirect_to":"EVENT_PAGE"})                
+                            fcm.send(device['fcm_token'],event.name+" Checked In",desc,{"redirect_to":"EVENT_PAGE"})
+
+            if status=="paid":
+                paidCount=EventStatus.objects.filter(event_id=event_id,paid=True).count()
+                if paidCount>0:
+                    desc="A new user and "+str(paidCount)+" have made payments for your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" and "+str(paidCount)+" have made payments for your event '"+ event.name +"'"
+                else:
+                    desc="A new user have made payments for your event '"+ event.name +"'"
+                    if user.first_name is not None:
+                        desc="@"+user.first_name+" have made payments for your event '"+ event.name +"'"
+                    # send notificaion to host
+                details={"has_button":False,"id":event.id}
+                Notification.objects.create(title=event.name+" Payment Received",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=event.user_id.id))
+                sentToUserDevices=Device.objects.filter(user_id=event.user_id.id).all()
+                if sentToUserDevices.count()>0:
+                    device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                    for device in device_serializer.data:
+                        if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                            fcm=Fcm()
+                            fcm.send(device['fcm_token'],event.name+" Payment Received",desc,{"redirect_to":"EVENT_PAGE"})
 
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
             if eventStatus is not None:
