@@ -116,6 +116,28 @@ class CreateEventAPIView(CreateAPIView):
                             if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                                 fcm=Fcm()
                                 fcm.send(device['fcm_token'],"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
+            # event change
+            guests=serializer.data['guests']
+            date=serializer.data['event_start_date']
+            if date:
+                cDate=datetime.strptime(date,'%Y-%m-%d')
+                date=cDate.strftime('%A, %B %d, %Y')
+            for guest in guests:
+                #notification
+                user=User.objects.filter(pk=serializer.data['user_id']).first()
+                if user is not None:
+                    serializer_user=UserSerializer(user)
+                    desc="@"+serializer_user.data['first_name']+" has made a change to his/her event '"+serializer.data['name']+"' on "+date
+                    details={"has_button":False,"id":serializer.data['id']}
+                    Notification.objects.create(title="Event Update",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=guest),created_by=user)
+                    sentToUserDevices=Device.objects.filter(user_id=guest).all()
+                    if sentToUserDevices.count()>0:
+                        device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                        for device in device_serializer.data:
+                            if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                                fcm=Fcm()
+                                fcm.send(device['fcm_token'],"Event Update",desc,{"redirect_to":"EVENT_PAGE"})
+                                                     
             return Response(res,status=status.HTTP_200_OK)
         res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)        
