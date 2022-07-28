@@ -472,10 +472,10 @@ class EventShareAPIView(APIView):
 
 class VenueStatusAPIView(APIView):
     """Following are possible values for the status types
-    \n"joined","un_joined","liked","un_liked""
+    \n"liked","un_liked""
     """
     def get(self,request,venue_id,user_id,status):
-        status_list = ["liked","un_liked","joined","un_joined"]
+        status_list = ["liked","un_liked"]
         if status in status_list:
             venueStatus=VenueStatus.objects.filter(user_id=user_id,venue_id=venue_id).first()
             if venueStatus is not None:
@@ -1004,26 +1004,26 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                     event['is_live']=isLive
                     events_list.append(event)
                 venue['events']=events_list
-                venueStatus={'liked':False,'joined':False}
+                venueStatus={'liked':False}
                 venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
                 if venueStatusByUser is not None:
                      if venueStatusByUser.liked:
                         venueStatus['liked']=True
-                     if venueStatusByUser.joined:
-                            venueStatus['joined']=True 
+                    #  if venueStatusByUser.joined:
+                    #         venueStatus['joined']=True 
                 venue['venue_status']=venueStatus              
                 venue['has_live_event']=True if liveEventCount > 0 else False              
                 venue_list.append(venue)
                 res={"status":True,"message":"venue found","data":{"venues":venue_list}}
             else:
                 venue['events']=[]
-                venueStatus={'liked':False,'joined':False}
+                venueStatus={'liked':False}
                 venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
                 if venueStatusByUser is not None:
                      if venueStatusByUser.liked:
                         venueStatus['liked']=True
-                     if venueStatusByUser.joined:
-                            venueStatus['joined']=True 
+                    #  if venueStatusByUser.joined:
+                    #         venueStatus['joined']=True 
                 venue['venue_status']=venueStatus 
                 venue['has_live_event']=True if liveEventCount > 0 else False               
                 venue_list.append(venue)
@@ -1134,25 +1134,25 @@ class VenueDetailAPIView(APIView):
                 event['is_live']=isLive
                 events_list.append(event)
             venue['events']=events_list
-            venueStatus={'liked':False,'joined':False}
+            venueStatus={'liked':False}
             venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
             if venueStatusByUser is not None:
                 if venueStatusByUser.liked:
                     venueStatus['liked']=True
-                    if venueStatusByUser.joined:
-                        venueStatus['joined']=True 
+                    # if venueStatusByUser.joined:
+                    #     venueStatus['joined']=True 
             venue['venue_status']=venueStatus              
             venue['has_live_event']=True if liveEventCount > 0 else False              
             res={"status":True,"message":"venue found","data":{"venue":venue}}
         else:
             venue['events']=[]
-            venueStatus={'liked':False,'joined':False}
+            venueStatus={'liked':False}
             venueStatusByUser=VenueStatus.objects.filter(user_id=user_id,venue_id=venue['id']).first() 
             if venueStatusByUser is not None:
                 if venueStatusByUser.liked:
                     venueStatus['liked']=True
-                    if venueStatusByUser.joined:
-                        venueStatus['joined']=True 
+                    # if venueStatusByUser.joined:
+                    #     venueStatus['joined']=True 
             venue['venue_status']=venueStatus 
             venue['has_live_event']=True if liveEventCount > 0 else False 
             res={"status":True,"message":"venue found with no events","data":{"venue":venue}}
