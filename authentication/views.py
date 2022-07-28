@@ -6,7 +6,7 @@ from telnetlib import STATUS
 from urllib import response
 from rest_framework.generics import GenericAPIView,CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
 from authentication.models import Device, SmsOTP, User, UserCardBilling
-from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserCardBillingSerializer, UserSerializer
+from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserCardBillingSerializer, UserDetailSerializer, UserSerializer
 from rest_framework import response,status
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -157,6 +157,16 @@ class DeviceByUserView(ListAPIView):
 #     def get_queryset(self):
 #         user_token = self.request.parser_context['kwargs'].get('user_token')
 #         return User.objects.all().filter(user_token=user_token)
+class DetailUserAPIView(APIView):
+    serializer_class=UserDetailSerializer()
+    def get(self,request,user_id,format=None):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        serializer=UserDetailSerializer(user)
+        res={"status":True,"message":"User found","data":{"data":serializer.data}}
+        return Response(res)
 
 class UserByTokenView(APIView):
     serializer_class=PulseUserSerializer
