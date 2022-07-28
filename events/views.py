@@ -475,6 +475,14 @@ class VenueStatusAPIView(APIView):
     \n"liked","un_liked""
     """
     def get(self,request,venue_id,user_id,status):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":"User not found","data":{}}
+            return Response(res)
+        venue=Venue.objects.filter(id=venue_id).first()
+        if venue is None:
+            res={"status":False,"message":"Venue not found","data":{}}
+            return Response(res)    
         status_list = ["liked","un_liked"]
         if status in status_list:
             venueStatus=VenueStatus.objects.filter(user_id=user_id,venue_id=venue_id).first()

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from authentication.models import User
-from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage
+from events.models import Age, Dress, Event, EventImage, EventStatus, Food, MenuImage, Music, RequestVenue, University, Venue, VenueImage, VenueStatus
 from django.db.models import Q
 from general.models import Friends
 from datetime import datetime
@@ -100,11 +100,20 @@ class VenueSerializer(serializers.ModelSerializer):
     price_range=serializers.SerializerMethodField()
     promoter_user=EventUserSerializer(read_only=True)
     created_by=EventUserSerializer(read_only=True)
+    like_count=serializers.SerializerMethodField()
+    liked_by_users=serializers.SerializerMethodField()
     class Meta:
         model=Venue
         # fields='__all__'
         exclude=('monday','monday_start_time','monday_end_time','tuesday','tuesday_start_time','tuesday_end_time','wednesday','wednesday_start_time','wednesday_end_time','thursday','thursday_start_time','thursday_end_time','friday','friday_start_time','friday_end_time','saturday','saturday_start_time','saturday_end_time','sunday','sunday_start_time','sunday_end_time','created_at','updated_at','archived')
-
+    def get_like_count(self,obj):
+        venueLikeStatus=VenueStatus.objects.filter(venue_id=obj.id,liked=True)
+        return venueLikeStatus.count() 
+    def get_liked_by_users(self,obj):
+        userIds=VenueStatus.objects.filter(venue_id=obj.id,liked=True).values("user_id")
+        users=User.objects.filter(pk__in=userIds)
+        serializer=EventUserSerializer(users,many=True)
+        return serializer.data
     def get_event_count(self,obj):
         eventStatus=Event.objects.filter(venue=obj.id)
         return eventStatus.count()
