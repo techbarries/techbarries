@@ -873,6 +873,20 @@ class VenueNearMeListAPIView(ListAPIView):
         popular=False
         return venueCommon(self, request,user_id,popular,latitude,longitude, *args, **kwargs)
 
+class VerifyVenueCheckInAPIView(ListAPIView):
+    def list(self, request,venue_id,latitude,longitude, *args, **kwargs):
+        venue=Venue.objects.filter(id=venue_id).first()
+        if venue is None:
+            res={"status":False,"message":"Venue not found","data":{}}
+            return Response(res)
+        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where id=%s  group by id  having distance < 10  ORDER BY distance ASC " % ( latitude, latitude, longitude,venue_id)
+        venues=Venue.objects.raw(query)
+        venueCount=len(venues)    
+        if venueCount >0:
+            res={"status":True,"message":"Venue in range","data":{}}
+            return Response(res)
+        res={"status":False,"message":"Venue not in range","data":{}}
+        return Response(res)
 
 def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None, *args, **kwargs):
     user=User.objects.filter(id=user_id).first()
