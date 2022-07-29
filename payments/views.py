@@ -1,5 +1,4 @@
 from decouple import config
-from django.shortcuts import render
 import stripe
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
@@ -10,7 +9,7 @@ from authentication.serializers import DeviceSerializer
 from events.models import Event
 from fcm import Fcm
 from general.models import Notification
-
+import GlobalConstant
 from payments.serializers import EventTransactionSerializer
 
 # Create your views here.
@@ -20,7 +19,7 @@ class CreatePaymentIntentAPIView(APIView):
         try:
             request.data['amount']
         except KeyError:
-            res={"status":False,"message":"amount param is missing","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_payment_intent_required_param"],"data":{}}
             return Response(res,status=status.HTTP_200_OK)      
 
         try:
@@ -37,7 +36,7 @@ class CreatePaymentIntentAPIView(APIView):
             res={"status":False,"message":str(e),"data":{}}
             return Response(res,status=status.HTTP_200_OK)      
                 
-        res={"status":True,"message":"Payment intent created successfully","data":{"client_secret":intent['client_secret']}}
+        res={"status":True,"message":GlobalConstant.Data["event_payment_intent_created"],"data":{"client_secret":intent['client_secret']}}
         return Response(res,status=status.HTTP_200_OK)
 
 
@@ -67,14 +66,14 @@ class CreateEventTransactionAPIView(CreateAPIView):
             return Response(res,status=status.HTTP_200_OK)
         user=User.objects.filter(id=request.data["user_id"]).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         event=Event.objects.filter(id=request.data["event_id"]).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Event transaction created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["event_transaction_for_ticket_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
@@ -105,6 +104,6 @@ class CreateEventTransactionAPIView(CreateAPIView):
 
 
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Event transaction"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)    
 

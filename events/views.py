@@ -1,7 +1,5 @@
 import ast
-from datetime import date, datetime
-from unicodedata import name
-from django.shortcuts import render
+from datetime import datetime
 from rest_framework.generics import CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
 from authentication.models import Device, User
 from authentication.serializers import DeviceSerializer, UserSerializer
@@ -12,6 +10,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.db.models import Q
 from fcm import Fcm
+import GlobalConstant
 
 from general.models import Notification
 from payments.models import EventTransaction
@@ -24,10 +23,10 @@ class CreateEventAPIView(CreateAPIView):
         try:
             request.data['user_id']
         except KeyError:
-            res={"status":False,"message":"user_id missing","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["create_event_user_id_required"],"data":{}}
             return Response(res,status=status.HTTP_200_OK)        
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Event created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["event_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             if request.FILES.getlist('event_images[]') is not None:
@@ -63,20 +62,20 @@ class CreateEventAPIView(CreateAPIView):
                                 fcm.send(device['fcm_token'],"You got invitation!",desc,{"redirect_to":"EVENT_PAGE"})
     
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Event"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
     def put(self,request):
         try:
             request.data['id']
         except KeyError:
-            res={"status":False,"message":"Id missing","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["update_data_id_required"],"data":{}}
             return Response(res,status=status.HTTP_200_OK)  
         event=Event.objects.filter(pk=request.data['id']).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         serializer=self.serializer_class(event,data=request.data)
-        res={"status":True,"message":"Event updated successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["event_updated"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             if request.FILES.getlist('event_images[]') is not None:
@@ -139,7 +138,7 @@ class CreateEventAPIView(CreateAPIView):
                                 fcm.send(device['fcm_token'],"Event Update",desc,{"redirect_to":"EVENT_PAGE"})
                                                      
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_update_error"].replace("#type#","Event"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)        
         
     # serializer_class=EventSerializer
@@ -152,20 +151,20 @@ class EventImageDeleteAPIView(APIView):
          image=EventImage.objects.filter(id=id).first()
          if image is not None:
             image.delete()
-            res={"status":True,"message":"Event Image deleted successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["event_image_deleted"],"data":{}}
          else:
-            res={"status":False,"message":"Event Image not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_image_not_exists"],"data":{}}
          return Response(res,status=status.HTTP_200_OK) 
         
 class EventDetailAPIView(APIView):
     def get(self,request,event_id,user_id):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         event=Event.objects.filter(id=event_id).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         serializer=EventSerializer(event)
         event=serializer.data        
@@ -255,7 +254,7 @@ class EventDetailAPIView(APIView):
                     if event['event_start_time'] and event['event_end_time'] and is_between(current_time,(event['event_start_time'],event['event_end_time'])):
                         isLive=True
                 event['is_live']=isLive
-                res={"status":True,"message":"event found","data":{"event":event}}
+                res={"status":True,"message":GlobalConstant.Data["event_exists"],"data":{"event":event}}
                 return Response(res)
 class EventStatusAPIView(APIView):
     """Following are possible values for the status types
@@ -264,18 +263,18 @@ class EventStatusAPIView(APIView):
     def get(self,request,event_id,user_id,status):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         event=Event.objects.filter(id=event_id).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         status_list = ["checked_in","checked_out","pinned","un_pinned","liked","un_liked","paid","joined","un_joined","going","not_going"]
         if status in status_list:
             if status=='joined':
                 serializer=EventSerializer(event)
                 if serializer.data['joined_count']>=serializer.data['open_guests_list']:
-                    res={"status":False,"message":"Can't join.Open guests list full","data":{}}
+                    res={"status":False,"message":GlobalConstant.Data["event_open_guest_list_full"],"data":{}}
                     return Response(res)
                 joinedCount=EventStatus.objects.filter(event_id=event_id,joined=True).count()
                 if joinedCount >0:
@@ -366,8 +365,8 @@ class EventStatusAPIView(APIView):
                     eventStatus.joined=False
                     eventStatus.not_going=True                                                                              
                 eventStatus.save();    
-                # res={"status":True,"message":"event status updated successfully","data":{}}
-                res={"status":True,"message":"event "+status+" successfully","data":{}}
+                # res={"status":True,"message":"event status updated successfully!","data":{}}
+                res={"status":True,"message":"Event "+status+" successfully!","data":{}}
                 return Response(res)
             else:
                 if status == "checked_in":
@@ -390,18 +389,18 @@ class EventStatusAPIView(APIView):
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id) ,going=False,joined=False,not_going=True)            
                 if status == "un_liked":
                     EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),liked=False)    
-                res={"status":True,"message":"event "+status+" successfully","data":{}}
+                res={"status":True,"message":"Event "+status+" successfully!","data":{}}
                 return Response(res)
         elif status=='leave':
             eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
             if eventStatus is not None:
                 eventStatus.delete()
-                res={"status":True,"message":"Left from event successfully","data":{}}
+                res={"status":True,"message":GlobalConstant.Data["event_left"],"data":{}}
             else:
-                res={"status":False,"message":"Event status not found.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["event_status_not_exists"],"data":{}}
             return Response(res)
         else:
-            res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
+            res={"status":False,"message":GlobalConstant.Data["invalid_event_status"],"data":{'status_list':status_list}}
             return Response(res)
 
 class EventShareAPIView(APIView):
@@ -422,18 +421,18 @@ class EventShareAPIView(APIView):
             request.data['user_id']
             request.data['to_user_id']
         except KeyError:
-            res={"status":False,"message":"data missing event_id, user_id,to_user_id","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_share_required_data"],"data":{}}
             return Response(res,status=status.HTTP_200_OK)   
         event_id=request.data['event_id']
         user_id=request.data['user_id']
         to_user_id=request.data['to_user_id']
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         event=Event.objects.filter(id=event_id).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         serializer=EventSerializer(event)
         serializer_user=UserSerializer(user)
@@ -454,7 +453,7 @@ class EventShareAPIView(APIView):
             for toUser in toUsers:            
                 to_user=User.objects.filter(id=toUser).first()
                 if to_user is None:
-                    res={"status":False,"message":"To User not found","data":{}}
+                    res={"status":False,"message":GlobalConstant.Data["event_share_to_user_not_exists"],"data":{}}
                     return Response(res)    
                 Notification.objects.create(title="Event Shared With You!",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=toUser),created_by=user)
                 sentToUserDevices=Device.objects.filter(user_id=toUser).all()
@@ -464,9 +463,9 @@ class EventShareAPIView(APIView):
                         if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                             fcm=Fcm()
                             fcm.send(device['fcm_token'],"Event Shared With You!",desc,{"redirect_to":"EVENT_PAGE"})              
-            res={"status":True,"message":"Shared event successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["event_shared"],"data":{}}
             return Response(res)
-        res={"status":False,"message":"to_user_id missing","data":{}}
+        res={"status":False,"message":GlobalConstant.Data["event_share_required_to_user_id"],"data":{}}
         return Response(res,status=status.HTTP_200_OK)           
 
 
@@ -477,11 +476,11 @@ class VenueStatusAPIView(APIView):
     def get(self,request,venue_id,user_id,status):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         venue=Venue.objects.filter(id=venue_id).first()
         if venue is None:
-            res={"status":False,"message":"Venue not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["venue_not_found"],"data":{}}
             return Response(res)    
         status_list = ["liked","un_liked"]
         if status in status_list:
@@ -496,7 +495,7 @@ class VenueStatusAPIView(APIView):
                 if status == "un_joined":
                     venueStatus.joined=False       
                 venueStatus.save();    
-                res={"status":True,"message":"Venue "+status+" successfully","data":{}}
+                res={"status":True,"message":"Venue "+status+" successfully!","data":{}}
                 return Response(res)
             else:
                 if status == "liked":
@@ -505,7 +504,7 @@ class VenueStatusAPIView(APIView):
                     VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id) ,joined=True)
                 if status == "un_liked":
                     VenueStatus.objects.create(user_id=User.objects.get(id=user_id),venue_id=Venue.objects.get(id=venue_id),liked=False)    
-                res={"status":True,"message":"Venue "+status+" successfully","data":{}}
+                res={"status":True,"message":"Venue "+status+" successfully!","data":{}}
                 return Response(res)
         else:
             res={"status":False,"message":"Invalid status provided.","data":{'status_list':status_list}}
@@ -516,7 +515,7 @@ class EventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         eventStatusIds=EventStatus.objects.values_list('event_id',flat=True).filter(user_id=user_id).all()    
         events=Event.objects.filter((Q(user_id=user_id) | Q(pk__in=set(eventStatusIds))),archived=False).all()
@@ -611,16 +610,16 @@ class EventListAPIView(ListAPIView):
                         isLive=True
                 event['is_live']=isLive
                 events_list.append(event)
-            res={"status":True,"message":"events found","data":{"events":events_list}}
+            res={"status":True,"message":GlobalConstant.Data["event_exists"],"data":{"events":events_list}}
         else:
-            res={"status":True,"message":"event not found","data":{"events":[]}}
+            res={"status":True,"message":GlobalConstant.Data["event_not_exists"],"data":{"events":[]}}
         return Response(res)
 
 class EventNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         latitude = latitude
         longitude = longitude 
@@ -721,27 +720,27 @@ class EventNearMeListAPIView(ListAPIView):
                         isLive=True
                 event['is_live']=isLive
                 events_list.append(event)
-            res={"status":True,"message":"events found","data":{"events":events_list}}
+            res={"status":True,"message":GlobalConstant.Data["event_exists"],"data":{"events":events_list}}
         else:
-            res={"status":True,"message":"event not found","data":{"events":[]}}
+            res={"status":True,"message":GlobalConstant.Data["event_not_exists"],"data":{"events":[]}}
         return Response(res)
 class PastEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         events=Event.objects.filter(user_id=user_id,event_end_date__lte=datetime.today(),archived=False).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
-            res={"status":True,"message":"events found","data":{"events":serializer.data}}
+            res={"status":True,"message":GlobalConstant.Data["event_exists"],"data":{"events":serializer.data}}
         else:
-            res={"status":False,"message":"Not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
         return Response(res)
 class UpcomingEventListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         events=Event.objects.filter(user_id=user_id,event_end_date__gte=datetime.today(),archived=False).all()
         if events.count() > 0:
             serializer = EventSerializer(events, many=True)
-            res={"status":True,"message":"events found","data":{"events":serializer.data}}
+            res={"status":True,"message":GlobalConstant.Data["event_exists"],"data":{"events":serializer.data}}
         else:
-            res={"status":False,"message":"Not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
         return Response(res)
 
 class EventArchiveAPIView(ListAPIView):
@@ -750,9 +749,9 @@ class EventArchiveAPIView(ListAPIView):
         if event is not None:
             event.archived=True
             event.save()
-            res={"status":True,"message":"Event archived successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["event_archived"],"data":{}}
             return Response(res)
-        res={"status":False,"message":"Event Not found","data":{}}    
+        res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}    
         return Response(res)
 class EventNotificaionStatusAPIView(ListAPIView):
     """
@@ -762,15 +761,15 @@ class EventNotificaionStatusAPIView(ListAPIView):
     def list(self, request,user_id,notificaion_id,event_id,status, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         event=Event.objects.filter(pk=event_id).first()
         if event is None:
-            res={"status":False,"message":"Event not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
             return Response(res)
         notification=Notification.objects.filter(id=notificaion_id).first()
         if notification is None:
-            res={"status":False,"message":"Notification not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["notification_not_exists"],"data":{}}
             return Response(res)            
         eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
         if  status=='accept':
@@ -785,7 +784,7 @@ class EventNotificaionStatusAPIView(ListAPIView):
                 details.update({"desc":"You have accepted event invite","action":"accepted"})
             notification.details=details
             notification.save()      
-            res={"status":True,"message":"Event accepted successfully","data":{}}
+            res={"status":True,"message":"Event accepted successfully!","data":{}}
         elif status=='decline':
             # 
             if eventStatus is not None:
@@ -796,9 +795,9 @@ class EventNotificaionStatusAPIView(ListAPIView):
                 details.update({"desc":"You have declined event invite","action":"declined"})
             notification.details=details
             notification.save()
-            res={"status":True,"message":"Event declined successfully","data":{}}
+            res={"status":True,"message":"Event declined successfully!","data":{}}
         else:
-            res={"status":False,"message":"provide valid status,'accept/decline'","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_status_not_exists"],"data":{}}
         return Response(res)
 
 class UniversityListAPIView(ListAPIView):
@@ -806,9 +805,9 @@ class UniversityListAPIView(ListAPIView):
         universities=University.objects.filter().values()
         if universities.count() > 0:
             serializer = UniversitySerializer(universities, many=True)
-            res={"status":True,"message":"universities found","data":{"universities":serializer.data}}
+            res={"status":True,"message":GlobalConstant.Data["universities_found"],"data":{"universities":serializer.data}}
         else:
-            res={"status":False,"message":"Not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["universities_not_found"],"data":{}}
         return Response(res)
     
     def get_queryset(self):
@@ -833,7 +832,7 @@ class CreateVenueAPIView(CreateAPIView):
     serializer_class=VenueSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Venue created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["venue_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             if request.FILES.getlist('venue_images[]') is not None:
@@ -843,7 +842,7 @@ class CreateVenueAPIView(CreateAPIView):
                     venueImage.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Venue"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
 # class VenueListAPIView(ListAPIView):
 #     serializer_class=VenueSerializer
@@ -859,12 +858,12 @@ class RequestVenueAPIView(CreateAPIView):
     serializer_class=RequestVenueSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Venue requested successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["venue_requested"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Venue request"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
 
 class VenueListAPIView(ListAPIView):
@@ -885,7 +884,7 @@ class VerifyVenueCheckInAPIView(ListAPIView):
     def list(self, request,venue_id,latitude,longitude, *args, **kwargs):
         venue=Venue.objects.filter(id=venue_id).first()
         if venue is None:
-            res={"status":False,"message":"Venue not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["venue_not_found"],"data":{}}
             return Response(res)
         query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_venue where id=%s  group by id  having distance < 10  ORDER BY distance ASC " % ( latitude, latitude, longitude,venue_id)
         venues=Venue.objects.raw(query)
@@ -899,7 +898,7 @@ class VerifyVenueCheckInAPIView(ListAPIView):
 def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None, *args, **kwargs):
     user=User.objects.filter(id=user_id).first()
     if user is None:
-        res={"status":False,"message":"User not found","data":{}}
+        res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
         return Response(res)
     venueCount=0
     if latitude is not None and longitude is not None:
@@ -1022,7 +1021,7 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                 venue['venue_status']=venueStatus              
                 venue['has_live_event']=True if liveEventCount > 0 else False              
                 venue_list.append(venue)
-                res={"status":True,"message":"venue found","data":{"venues":venue_list}}
+                res={"status":True,"message":GlobalConstant.Data["venue_found"],"data":{"venues":venue_list}}
             else:
                 venue['events']=[]
                 venueStatus={'liked':False}
@@ -1035,21 +1034,21 @@ def venueCommon(self, request,user_id,popular=None,latitude=None,longitude=None,
                 venue['venue_status']=venueStatus 
                 venue['has_live_event']=True if liveEventCount > 0 else False               
                 venue_list.append(venue)
-                res={"status":True,"message":"event not found","data":{"venues":venue_list}}
+                res={"status":True,"message":GlobalConstant.Data["event_not_exists"],"data":{"venues":venue_list}}
     else:
-        res={"status":True,"message":"venue not found","data":{"venues":[]}}
+        res={"status":True,"message":GlobalConstant.Data["venue_not_found"],"data":{"venues":[]}}
     return Response(res)
 
 class VenueDetailAPIView(APIView):
     def get(self,request,venue_id,user_id):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
 
         venue=Venue.objects.filter(id=venue_id).first()    
         if venue is None:
-            res={"status":False,"message":"Venue not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["venue_not_found"],"data":{}}
             return Response(res)
         venueData=VenueSerializer(venue)
         venue=venueData.data
@@ -1151,7 +1150,7 @@ class VenueDetailAPIView(APIView):
                     #     venueStatus['joined']=True 
             venue['venue_status']=venueStatus              
             venue['has_live_event']=True if liveEventCount > 0 else False              
-            res={"status":True,"message":"venue found","data":{"venue":venue}}
+            res={"status":True,"message":GlobalConstant.Data["venue_found"],"data":{"venue":venue}}
         else:
             venue['events']=[]
             venueStatus={'liked':False}
@@ -1163,7 +1162,7 @@ class VenueDetailAPIView(APIView):
                     #     venueStatus['joined']=True 
             venue['venue_status']=venueStatus 
             venue['has_live_event']=True if liveEventCount > 0 else False 
-            res={"status":True,"message":"venue found with no events","data":{"venue":venue}}
+            res={"status":True,"message":GlobalConstant.Data["venue_found_with_no_events"],"data":{"venue":venue}}
 
         return Response(res)                 
                 

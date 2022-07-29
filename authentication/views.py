@@ -1,19 +1,11 @@
-from ast import Not
 from datetime import datetime,timezone
-from email import message
-import imp
-from telnetlib import STATUS
-from urllib import response
-from rest_framework.generics import GenericAPIView,CreateAPIView,ListAPIView,RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView,CreateAPIView,ListAPIView
 from authentication.models import Device, SmsOTP, User, UserCardBilling
 from authentication.serializers import DeviceSerializer, PulseUserSerializer, UserCardBillingSerializer, UserDetailSerializer, UserSerializer
-from rest_framework import response,status
-from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from django.core.exceptions import ObjectDoesNotExist
-import random
+import random,GlobalConstant
 
 from authentication.twilio import Twilio
 from events.models import EventStatus, University
@@ -24,31 +16,31 @@ class PulseUserAPIView(GenericAPIView):
     serializer_class=PulseUserSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"User created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["user_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","User"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
         # return response.Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     def put(self,request):
         try:
             request.data['id']
         except KeyError:
-            res={"status":False,"message":"Id missing","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["update_data_id_required"],"data":{}}
             return Response(res,status=status.HTTP_200_OK) 
         user=User.objects.filter(pk=request.data['id']).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         serializer=PulseUserSerializer(user,data=request.data)  
-        res={"status":True,"message":"User updated successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["user_updated"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_update_error"].replace("#type#","User"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)           
 
 class DeleteUserAPIView(APIView):
@@ -56,9 +48,9 @@ class DeleteUserAPIView(APIView):
         user=User.objects.filter(id=id).first()
         if user is not None and user.is_active:
             user.delete()
-            res={"status":True,"message":"User deleted successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["user_deleted"],"data":{}}
         else:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
         return Response(res,status=status.HTTP_200_OK)
 class UserListAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
@@ -73,9 +65,9 @@ class UserListAPIView(ListAPIView):
                 #         serializer=UniversitySerializer(university)
                 #         user['university']=serializer.data
                 userList.append(user)
-            res={"status":True,"message":"users found","data":{"users":userList}}
+            res={"status":True,"message":GlobalConstant.Data["user_exists"],"data":{"users":userList}}
         else:
-            res={"status":False,"message":"Not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
         return Response(res)
     # def get_queryset(self):
     #     return User.objects.filter(is_active=1)
@@ -84,12 +76,12 @@ class CreateDeviceAPIView(CreateAPIView):
     serializer_class=DeviceSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"device created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["device_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Device"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
     # def perform_create(self, serializer):
     #     return super().perform_create(serializer)
@@ -98,7 +90,7 @@ class DeviceListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         devices=Device.objects.filter(user_id=user_id).all()
         if devices.count() > 0:
@@ -106,10 +98,10 @@ class DeviceListAPIView(ListAPIView):
             device_list=[]
             for device in serializer.data:
                 device_list.append(device)
-            res={"status":True,"message":"devices found","data":{"devices":device_list}}
+            res={"status":True,"message":GlobalConstant.Data["device_exists"],"data":{"devices":device_list}}
 
         else:
-            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+            res={"status":True,"message":GlobalConstant.Data["device_not_exists"],"data":{"devices":[]}}
         return Response(res) 
 
 class DeviceAPIView(ListAPIView):
@@ -120,16 +112,16 @@ class DeviceAPIView(ListAPIView):
             device_list=[]
             for device in serializer.data:
                 device_list.append(device)
-            res={"status":True,"message":"devices found","data":{"devices":device_list}}
+            res={"status":True,"message":GlobalConstant.Data["device_exists"],"data":{"devices":device_list}}
         else:
-            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+            res={"status":True,"message":GlobalConstant.Data["device_not_exists"],"data":{"devices":[]}}
         return Response(res) 
             
 class DeviceByUserView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         devices=Device.objects.filter(user_id=user_id).all()
         if devices.count() > 0:
@@ -137,10 +129,10 @@ class DeviceByUserView(ListAPIView):
             device_list=[]
             for device in serializer.data:
                 device_list.append(device)
-            res={"status":True,"message":"devices found","data":{"devices":device_list}}
+            res={"status":True,"message":GlobalConstant.Data["device_exists"],"data":{"devices":device_list}}
 
         else:
-            res={"status":True,"message":"devices not found","data":{"devices":[]}}
+            res={"status":True,"message":GlobalConstant.Data["device_not_exists"],"data":{"devices":[]}}
         return Response(res) 
 
     # serializer_class = DeviceSerializer
@@ -162,17 +154,17 @@ class DetailUserAPIView(APIView):
     def get(self,request,user_id,format=None):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         serializer=UserDetailSerializer(user)
-        res={"status":True,"message":"User found","data":{"data":serializer.data}}
+        res={"status":True,"message":GlobalConstant.Data["user_exists"],"data":{"data":serializer.data}}
         return Response(res)
 
 class UserByTokenView(APIView):
     serializer_class=PulseUserSerializer
     def get(self,request,uid,format=None):
         uid=uid
-        res={"status":True,"message":"User found","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["user_exists"],"data":{}}
         if uid is not None:
             user=User.objects.filter(uid=uid).first()
             if user is not None:
@@ -206,7 +198,7 @@ class UserByTokenView(APIView):
                 #     userItem.update({"university":serializer.data})
                 res.update(data=userItem)
                 return Response(res)
-        res.update(status=False,message="Not found")
+        res.update(status=False,message=GlobalConstant.Data["user_not_exists"])
         return Response(res)
 
 class GenerateSmsOTP(APIView):
@@ -220,33 +212,33 @@ class GenerateSmsOTP(APIView):
             twilio=Twilio("Your Otp Code is:"+str(otp),phone)
             smsResponse=twilio.send()
             if smsResponse==1:
-                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp,"counter":phoneNumber.counter}}
+                res={"status":True,"message":GlobalConstant.Data["otp_sent"],"data":{"otp":otp,"counter":phoneNumber.counter}}
                 return Response(res)
             elif smsResponse==2:   
-                res={"status":False,"message":"Twilio Unable to send otp.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["twilio_unable_to_send"],"data":{}}
                 return Response(res)
             else:
-                res={"status":False,"message":"Invalid phone number.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["invalid_phone_number"],"data":{}}
                 return Response(res)        
         else:  
             SmsOTP.objects.create(phone=phone,otp=otp,is_verified=0)
             twilio=Twilio("Your Otp Code is:"+str(otp),phone)
             smsResponse=twilio.send()
             if smsResponse==1:
-                res={"status":True,"message":"Otp sent successfully","data":{"otp":otp}}
+                res={"status":True,"message":GlobalConstant.Data["otp_sent"],"data":{"otp":otp}}
                 return Response(res)
             elif smsResponse==2:   
-                res={"status":False,"message":"Twilio Unable to send otp.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["twilio_unable_to_send"],"data":{}}
                 return Response(res)
             else:
-                res={"status":False,"message":"Invalid phone number.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["invalid_phone_number"],"data":{}}
                 return Response(res)
                 
 class VerifySmsOTP(APIView):        
     @staticmethod
     def post(request,phone,otp):
         if otp is None:
-            res={"status":False,"message":"Otp is required","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["otp_required"],"data":{}}
             return Response(res)
         phoneNumber=SmsOTP.objects.filter(phone=phone,is_verified=0).first()
         if phoneNumber is not None:
@@ -255,20 +247,20 @@ class VerifySmsOTP(APIView):
                 delta=delta.total_seconds()/ (60 * 60)
                 delta=round(delta,1)
                 if phoneNumber.counter > 5 and delta < 1:
-                    res={"status":False,"message":"Too many tries.Can try after 1 hour.","data":{"counter":phoneNumber.counter}}
+                    res={"status":False,"message":GlobalConstant.Data["too_many_tries"],"data":{"counter":phoneNumber.counter}}
                     return Response(res)
                 elif phoneNumber.counter > 5 and delta > 0:
                     phoneNumber.counter=0
                 else:
                     phoneNumber.counter+=1
                 phoneNumber.save()
-                res={"status":False,"message":"Invalid otp.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["invalid_otp"],"data":{}}
                 return Response(res)    
             phoneNumber.is_verified=1
             phoneNumber.save()
-            res={"status":True,"message":"Otp verified successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["otp_verified"],"data":{}}
             return Response(res)
-        res={"status":False,"message":"Invalid otp.","data":{}}
+        res={"status":False,"message":GlobalConstant.Data["invalid_otp"],"data":{}}
         return Response(res)
  
 
@@ -276,12 +268,12 @@ class CreateCardBillingAPIView(CreateAPIView):
     serializer_class=UserCardBillingSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Card billling created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["card_billing_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Card"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
             
 
@@ -289,15 +281,15 @@ class CardBillingListAPIView(ListAPIView):
     def list(self, request,user_id,otp, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         phone=user.phone_number
         if phone is None or len(phone)==0:
-            res={"status":False,"message":"User phone not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_phone_not_found"],"data":{}}
             return Response(res)
         smsOtp=SmsOTP.objects.filter(phone=user.phone_number,otp=otp,is_verified=0).first()    
         if smsOtp is None:
-            res={"status":False,"message":"Invalid otp provided","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["invalid_otp"],"data":{}}
             return Response(res)
         smsOtp.is_verified=1
         smsOtp.save()
@@ -307,10 +299,10 @@ class CardBillingListAPIView(ListAPIView):
             card_billing_list=[]
             for card in serializer.data:
                 card_billing_list.append(card)
-            res={"status":True,"message":"card billing list found","data":{"cards":card_billing_list}}
+            res={"status":True,"message":GlobalConstant.Data["card_exists"],"data":{"cards":card_billing_list}}
 
         else:
-            res={"status":True,"message":"card not found","data":{"cards":[]}}
+            res={"status":True,"message":GlobalConstant.Data["card_not_exists"],"data":{"cards":[]}}
         return Response(res)             
 
         

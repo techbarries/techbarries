@@ -1,5 +1,4 @@
 import ast
-import json
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import CreateAPIView,ListAPIView
@@ -12,7 +11,7 @@ from general.serializers import FaqSerializer, FriendsSerializer, InviteFriendsS
 from django.db.models import Q
 from authentication.twilio import Twilio
 from rest_framework.views import APIView
-
+import GlobalConstant
 
 
 # Create your views here.
@@ -31,27 +30,27 @@ class CreateNotificationAPIView(CreateAPIView):
     serializer_class=NotificationSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Notification created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["notificaion_created"],"data":{}}
         if serializer.is_valid():
             serializer.save()
             res.update(data=serializer.data)
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Notification"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
 class DeleteNotificationAPIView(APIView):
     def delete(self,request,id, *args, **kwargs):
          notification=Notification.objects.filter(id=id).first()
          if notification is not None:
             notification.delete()
-            res={"status":True,"message":"Notification deleted successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["notificaion_deleted"],"data":{}}
          else:
-            res={"status":False,"message":"Notification not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["notification_not_exists"],"data":{}}
          return Response(res,status=status.HTTP_200_OK)     
 class NotificationListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         notifications=Notification.objects.filter(user_id=user_id).all()
         if notifications.count() > 0:
@@ -66,42 +65,42 @@ class NotificationListAPIView(ListAPIView):
                     except:
                         device['details']= device['details']
                 notification_list.append(device)
-            res={"status":True,"message":"notifications found","data":{"notifications":notification_list}}
+            res={"status":True,"message":GlobalConstant.Data["notificaion_found"],"data":{"notifications":notification_list}}
 
         else:
-            res={"status":True,"message":"notifications not found","data":{"notifications":[]}}
+            res={"status":True,"message":GlobalConstant.Data["notificaion_not_found"],"data":{"notifications":[]}}
         return Response(res) 
 
 class FaqListApiView(ListAPIView):
     def list(self, request, *args, **kwargs):
         faq=Faq.objects.all()
         if faq is None or faq.count() < 1:
-            res={"status":False,"message":"Faq not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["faq_not_found"],"data":{}}
             return Response(res)
         seriliazer=FaqSerializer(faq,many=True)
-        res={"status":True,"message":"faqs found","data":{"faqs":seriliazer.data}}
+        res={"status":True,"message":GlobalConstant.Data["faq_found"],"data":{"faqs":seriliazer.data}}
         return Response(res) 
 class NotificationMarkReadAPIView(ListAPIView):
     def list(self, request,user_id,id=None, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         if id is not None:
             notification=Notification.objects.filter(pk=id,user_id=user_id).first()
             if notification is not None:
                 notification.status=True
                 notification.save()
-                res={"status":True,"message":"notification mark as read successfully","data":{}}
+                res={"status":True,"message":GlobalConstant.Data["notificaion_mark_read"],"data":{}}
             else:   
-                res={"status":True,"message":"notification not found","data":{}}
+                res={"status":True,"message":GlobalConstant.Data["notificaion_not_found"],"data":{}}
         else:
             notifications=Notification.objects.filter(user_id=user_id).all()
             if notifications.count() > 0:
                 notifications=Notification.objects.filter(user_id=user_id).update(status=True)
-                res={"status":True,"message":"notifications mark as read successfully","data":{}}
+                res={"status":True,"message":GlobalConstant.Data["notificaion_mark_read"],"data":{}}
             else:
-                res={"status":True,"message":"notifications not found","data":{}}
+                res={"status":True,"message":GlobalConstant.Data["notificaion_not_found"],"data":{}}
         return Response(res)
 
 class NotificationAPIView(ListAPIView):
@@ -119,20 +118,20 @@ class NotificationAPIView(ListAPIView):
                     except:
                         device['details']= device['details']
                 notification_list.append(device)
-            res={"status":True,"message":"notifications found","data":{"notifications":notification_list}}
+            res={"status":True,"message":GlobalConstant.Data["notificaion_found"],"data":{"notifications":notification_list}}
         else:
-            res={"status":True,"message":"notifications not found","data":{"notifications":[]}}
+            res={"status":True,"message":GlobalConstant.Data["notificaion_not_found"],"data":{"notifications":[]}}
         return Response(res)
 
 class CreateFriendRequestAPIView(CreateAPIView):
     serializer_class=FriendsSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        res={"status":True,"message":"Friend Request created successfully","data":{}}
+        res={"status":True,"message":GlobalConstant.Data["friend_request_created"],"data":{}}
         if serializer.is_valid():
             alreadyExists=Friends.objects.filter(Q(sent_by_user_id=request.data['sent_by_user_id'],sent_to_user_id=request.data['sent_to_user_id']) | Q(sent_by_user_id=request.data['sent_to_user_id'],sent_to_user_id=request.data['sent_by_user_id']) ).all()
             if alreadyExists.count()>0:
-                res={"status":False,"message":"Already friend request exists.","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["friend_request_already_sent"],"data":{}}
                 return Response(res)
             serializer.save()
             res.update(data=serializer.data)
@@ -154,7 +153,7 @@ class CreateFriendRequestAPIView(CreateAPIView):
                             fcm=Fcm()
                             fcm.send(device['fcm_token'],"New friend request!",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Friend"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
 
 class InviteByPhoneAPIView(CreateAPIView):
@@ -165,7 +164,7 @@ class InviteByPhoneAPIView(CreateAPIView):
             user_id=request.data['sent_by_user_id']
             user=User.objects.filter(id=user_id).first()
             if user is None:
-                res={"status":False,"message":"User not found","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
                 return Response(res)
             if user.first_name is not None and  len(user.first_name)>0:
                 msg="You are invited to download Pulse APP by "+user.first_name+". Clicking the link: https://google.com"
@@ -182,7 +181,7 @@ class InviteByPhoneAPIView(CreateAPIView):
                     InviteFriends.objects.create(phone_number=phone,sent_by_user_id=User.objects.get(id=request.data['sent_by_user_id']))
                     twilio=Twilio(msg,phone)
                     smsResponse=twilio.send()
-        res={"status":False,"message":"Sms sent to phone numbers.","data":{}}
+        res={"status":False,"message":GlobalConstant.Data["invite_for_app_install_sms_sent"],"data":{}}
         return Response(res,status=status.HTTP_200_OK)        
         
 
@@ -190,7 +189,7 @@ class FriendRequestsListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         friendRequests=Friends.objects.filter(sent_to_user_id=user_id,status=False).all()
         if friendRequests.count() > 0:
@@ -226,17 +225,17 @@ class FriendRequestsListAPIView(ListAPIView):
                     userItem.update({"user_score":user_score})
                     friendrequest['sent_by_user']=userItem
                 friendRequestsList.append(friendrequest)
-            res={"status":True,"message":"friendRequests found","data":{"friend_requests":friendRequestsList}}
+            res={"status":True,"message":GlobalConstant.Data["friend_requests_found"],"data":{"friend_requests":friendRequestsList}}
 
         else:
-            res={"status":True,"message":"friendRequests not found","data":{"friend_requests":[]}}
+            res={"status":True,"message":GlobalConstant.Data["friend_requests_not_found"],"data":{"friend_requests":[]}}
         return Response(res)     
 
 class FriendsListAPIView(ListAPIView):
     def list(self, request,user_id, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":"User not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
             return Response(res)
         friends=Friends.objects.filter(Q(sent_to_user_id=user_id )|Q(sent_by_user_id=user_id ),status=True).all()
         if friends.count() > 0:
@@ -276,10 +275,10 @@ class FriendsListAPIView(ListAPIView):
                     friend['friend_user']=userItem
                     
                 friendsList.append(friend)
-            res={"status":True,"message":"friends found","data":{"friends":friendsList}}
+            res={"status":True,"message":"Friends found","data":{"friends":friendsList}}
 
         else:
-            res={"status":True,"message":"friends not found","data":{"friends":[]}}
+            res={"status":True,"message":"Friends not found","data":{"friends":[]}}
         return Response(res)
 
 class FriendRequestStatusAPIView(ListAPIView):
@@ -290,11 +289,11 @@ class FriendRequestStatusAPIView(ListAPIView):
     def list(self, request,id,status, *args, **kwargs):
         friendRequest=Friends.objects.filter(pk=id).first()
         if friendRequest is None:
-            res={"status":False,"message":"friendRequest not found","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["friend_requests_not_found"],"data":{}}
             return Response(res)
         if  status=='accept':
             if friendRequest.status:
-                res={"status":False,"message":"friendRequest already accepted","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["friend_request_already_accepted"],"data":{}}
                 return Response(res)
             friendRequest.status=True
             # 
@@ -320,7 +319,7 @@ class FriendRequestStatusAPIView(ListAPIView):
                         fcm=Fcm()
                         fcm.send(device['fcm_token'],"Friend request accepted",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})
         
-            res={"status":True,"message":"friendRequest accepted successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["friend_request_accepted"],"data":{}}
         elif status=='decline':
             # 
             if friendRequest.notification is not None:
@@ -344,11 +343,11 @@ class FriendRequestStatusAPIView(ListAPIView):
                         fcm=Fcm()
                         fcm.send(device['fcm_token'],"Friend request declined",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})        
             friendRequest.delete()
-            res={"status":True,"message":"friendRequest declined successfully","data":{}}
+            res={"status":True,"message":GlobalConstant.Data["friend_request_declined"],"data":{}}
         elif status=='un_friend':
             # friendRequest.delete()
             if not friendRequest.status:
-                res={"status":False,"message":"already unfriend","data":{}}
+                res={"status":False,"message":GlobalConstant.Data["already_unfriend"],"data":{}}
                 return Response(res)
             friendRequest.status=False
             # 
@@ -373,9 +372,9 @@ class FriendRequestStatusAPIView(ListAPIView):
                     if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                         fcm=Fcm()
                         fcm.send(device['fcm_token'],"Friend un-friend",desc,{"redirect_to":"FRIEND_PROFILE_PAGE"})             
-            res={"status":True,"message":"friendRequest un_friend successfully","data":{}}    
+            res={"status":True,"message":GlobalConstant.Data["friend_request_un_friend"],"data":{}}    
         else:
-            res={"status":False,"message":"provide valid status,'accept/decline/un_friend'","data":{}}
+            res={"status":False,"message":GlobalConstant.Data["invalid_friend_request_status"],"data":{}}
         return Response(res)
 
 
@@ -428,5 +427,5 @@ class CreateReportAPIView(CreateAPIView):
                                 fcm.send(device['fcm_token'],event.name+" - Event Reported",desc,{"redirect_to":"Report_PAGE"})
 
             return Response(res,status=status.HTTP_200_OK)
-        res.update(status=False,message="Validation error",data={"errors":serializer.errors})    
+        res.update(status=False,message=GlobalConstant.Data["validation_error"].replace("#type#","Report"),data={"errors":serializer.errors})    
         return Response(res,status=status.HTTP_200_OK)
