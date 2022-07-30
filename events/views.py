@@ -364,7 +364,7 @@ class EventStatusAPIView(APIView):
                     eventStatus.going=False 
                     eventStatus.joined=False
                     eventStatus.not_going=True                                                                              
-                eventStatus.save();    
+                eventStatus.save()
                 # res={"status":True,"message":"event status updated successfully!","data":{}}
                 res={"status":True,"message":"Event "+status+" successfully!","data":{}}
                 return Response(res)
@@ -614,7 +614,65 @@ class EventListAPIView(ListAPIView):
         else:
             res={"status":True,"message":GlobalConstant.Data["event_not_exists"],"data":{"events":[]}}
         return Response(res)
+class EventCheckInAPIView(ListAPIView):
+    def list(self, request,event_id,user_id,latitude,longitude, *args, **kwargs):
+        user=User.objects.filter(id=user_id).first()
+        if user is None:
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
+            return Response(res)
+        event=Event.objects.filter(id=event_id).first()
+        if event is None:
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
+            return Response(res)
+        query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event where id=%s  group by id  having distance < 10  ORDER BY distance ASC " % ( latitude, latitude, longitude,event_id)
+        events=Event.objects.raw(query)
+        eventCount=len(events)    
+        if eventCount > 0:
+            serializer = EventSerializer(events, many=True)
+            for selectedEvent in serializer.data:
+                current_time = datetime.now().strftime('%H:%M:%S')
+                eventEnd=selectedEvent['event_end_date']+" "+selectedEvent['event_end_time']
+                eventStart=selectedEvent['event_start_date']+" "+selectedEvent['event_start_time']
+                eventEndParsed=datetime.strptime(eventEnd,"%Y-%m-%d %H:%M:%S")
+                eventStartParsed=datetime.strptime(eventStart,"%Y-%m-%d %H:%M:%S")
+                if eventEndParsed  >= datetime.today() >= eventStartParsed:
+                    if selectedEvent['event_start_time'] and selectedEvent['event_end_time'] and is_between(current_time,(selectedEvent['event_start_time'],selectedEvent['event_end_time'])):
+                        #check in notification
+                        eventStatus=EventStatus.objects.filter(user_id=user_id,event_id=event_id).first()
+                        if eventStatus is not None:
+                            eventStatus.checked_in=True
+                            eventStatus.save()
+                        else:
+                            EventStatus.objects.create(user_id=User.objects.get(id=user_id),event_id=Event.objects.get(id=event_id),checked_in=True)    
 
+                        checkedInCount=EventStatus.objects.filter(event_id=event_id,checked_in=True).count()
+                        if checkedInCount>0:
+                            desc="A new user and "+str(checkedInCount)+" have checked in to your event '"+ event.name +"'"
+                            if user.first_name is not None:
+                                desc="@"+user.first_name+" and "+str(checkedInCount)+" have checked in to your event '"+ event.name +"'"
+                        else:
+                            desc="A new user have checked in to your event '"+ event.name +"'"
+                            if user.first_name is not None:
+                                desc="@"+user.first_name+" have checked in to your event '"+ event.name +"'"
+                            # send notificaion to host
+                        details={"has_button":False,"id":event.id}
+                        Notification.objects.create(title=event.name+" Checked In",description=desc,redirect_to="EVENT_PAGE",details=details,user_id=User.objects.get(id=event.user_id.id))
+                        sentToUserDevices=Device.objects.filter(user_id=event.user_id.id).all()
+                        if sentToUserDevices.count()>0:
+                            device_serializer=DeviceSerializer(sentToUserDevices,many=True)
+                            for device in device_serializer.data:
+                                if device['fcm_token'] is not None and len(device['fcm_token'])>0:
+                                    fcm=Fcm()
+                                    fcm.send(device['fcm_token'],event.name+" Checked In",desc,{"redirect_to":"EVENT_PAGE"})
+                        res={"status":True,"message":"You have checked-in successfully!","data":{}}
+                        return Response(res)
+                elif  eventEndParsed < datetime.today():
+                    res={"status":True,"message":"This event has ended, you can't check in.","data":{}}
+                    return Response(res)
+            res={"status":False,"message":"The event is not live yet!","data":{}}
+            return Response(res)
+        res={"status":False,"message":"In order to check in to an event, you have to be at the event's exact location.","data":{}}
+        return Response(res)
 class EventNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()

@@ -1,4 +1,4 @@
-from events.views import CreateEventAPIView, EventArchiveAPIView, EventImageDeleteAPIView,EventNotificaionStatusAPIView,EventShareAPIView, EventListAPIView,EventNearMeListAPIView, EventStatusAPIView, PastEventListAPIView, UpcomingEventListAPIView,EventDetailAPIView 
+from events.views import CreateEventAPIView, EventArchiveAPIView, EventCheckInAPIView, EventImageDeleteAPIView,EventNotificaionStatusAPIView,EventShareAPIView, EventListAPIView,EventNearMeListAPIView, EventStatusAPIView, PastEventListAPIView, UpcomingEventListAPIView,EventDetailAPIView 
 from django.urls import path
 
 urlpatterns=[
@@ -9,6 +9,7 @@ urlpatterns=[
     path('<int:event_id>/user/<int:user_id>',EventDetailAPIView.as_view(),name="event-detail"),
     path('<int:event_id>/archive',EventArchiveAPIView.as_view(),name="event-archive"),
     path('<int:event_id>/user/<int:user_id>/<slug:status>',EventStatusAPIView.as_view(),name="event-status-update"),
+    path('<int:event_id>/check-in/user/<int:user_id>/<str:latitude>/<str:longitude>',EventCheckInAPIView.as_view(),name="event-checkin"),
     path('events/<int:user_id>',EventListAPIView.as_view(),name="events"),
     path('near-me/events/<int:user_id>/<str:latitude>/<str:longitude>',EventNearMeListAPIView.as_view(),name="events"),
     path('events/<int:user_id>/past',PastEventListAPIView.as_view(),name="events"),
