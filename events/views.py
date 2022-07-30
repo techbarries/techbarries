@@ -618,11 +618,11 @@ class EventCheckInAPIView(ListAPIView):
     def list(self, request,event_id,user_id,latitude,longitude, *args, **kwargs):
         user=User.objects.filter(id=user_id).first()
         if user is None:
-            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{}}
+            res={"status":False,"message":GlobalConstant.Data["user_not_exists"],"data":{"check_in":False}}
             return Response(res)
         event=Event.objects.filter(id=event_id).first()
         if event is None:
-            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{}}
+            res={"status":False,"message":GlobalConstant.Data["event_not_exists"],"data":{"check_in":False}}
             return Response(res)
         query= "SELECT id,latitude, longitude, 3956 * 2 * ASIN(SQRT(POWER(SIN((%s - latitude) * 0.0174532925 / 2), 2) + COS(%s * 0.0174532925) * COS(latitude * 0.0174532925) * POWER(SIN((%s - longitude) * 0.0174532925 / 2), 2) )) as distance from events_event where id=%s  group by id  having distance < 10  ORDER BY distance ASC " % ( latitude, latitude, longitude,event_id)
         events=Event.objects.raw(query)
@@ -669,9 +669,9 @@ class EventCheckInAPIView(ListAPIView):
                 elif  eventEndParsed < datetime.today():
                     res={"status":False,"message":"This event has ended, you can't check in.","data":{"check_in":False}}
                     return Response(res)
-            res={"status":False,"message":"The event is not live yet!","data":{}}
+            res={"status":False,"message":"The event is not live yet!","data":{"check_in":False}}
             return Response(res)
-        res={"status":False,"message":"In order to check in to an event, you have to be at the event's exact location.","data":{}}
+        res={"status":False,"message":"In order to check in to an event, you have to be at the event's exact location.","data":{"check_in":False}}
         return Response(res)
 class EventNearMeListAPIView(ListAPIView):
     def list(self, request,user_id,latitude,longitude, *args, **kwargs):
