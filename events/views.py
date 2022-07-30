@@ -664,10 +664,10 @@ class EventCheckInAPIView(ListAPIView):
                                 if device['fcm_token'] is not None and len(device['fcm_token'])>0:
                                     fcm=Fcm()
                                     fcm.send(device['fcm_token'],event.name+" Checked In",desc,{"redirect_to":"EVENT_PAGE"})
-                        res={"status":True,"message":"You have checked-in successfully!","data":{}}
+                        res={"status":True,"message":"You have checked-in successfully!","data":{"check_in":True}}
                         return Response(res)
                 elif  eventEndParsed < datetime.today():
-                    res={"status":True,"message":"This event has ended, you can't check in.","data":{}}
+                    res={"status":False,"message":"This event has ended, you can't check in.","data":{"check_in":False}}
                     return Response(res)
             res={"status":False,"message":"The event is not live yet!","data":{}}
             return Response(res)
