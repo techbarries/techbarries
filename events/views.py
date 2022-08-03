@@ -442,10 +442,10 @@ class EventShareAPIView(APIView):
             date=cDate.strftime('%A, %B %d, %Y')
         else:
             date="today"    
-        if serializer.data['name'] or date or serializer_user.data['first_name']  is None:
-            desc="Someone shared event with you"
-        else:
-            desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
+        # if serializer.data['name'] or date or serializer_user.data['first_name']  is None:
+        #     desc="Someone shared event with you"
+        # else:
+        desc="You have a shared event '"+serializer.data['name']+"' on "+date+" by @"+serializer_user.data['first_name']
         details={"has_button":False,"id":serializer.data['id']}    
         if to_user_id is not None:
             toUsersIds=to_user_id
