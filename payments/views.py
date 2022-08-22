@@ -53,6 +53,7 @@ class CreateEventTransactionAPIView(CreateAPIView):
     "cover_fee":12,
     "no_of_tickets":1,
     "processing_fee":10,
+    "service_tip":15
     "pulse_service_charges":20
     
 }"""

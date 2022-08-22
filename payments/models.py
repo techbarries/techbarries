@@ -16,6 +16,7 @@ class EventTransaction(TrackingModel):
     cover_fee=models.IntegerField(default=0,blank=True,null=True)
     no_of_tickets=models.IntegerField(default=1,blank=True,null=True)
     processing_fee=models.IntegerField(default=0,blank=True,null=True)
+    service_tip=models.IntegerField(default=0,blank=True,null=True)
     pulse_service_charges=models.IntegerField(default=0,blank=True,null=True)
 
 
