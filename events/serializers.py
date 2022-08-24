@@ -159,6 +159,7 @@ class EventSerializer(serializers.ModelSerializer):
     event_images=EventImageSerializer(many=True,read_only=True)
     like_count=serializers.SerializerMethodField()
     joined_count=serializers.SerializerMethodField()
+    joined_users=serializers.SerializerMethodField()
     user=serializers.SerializerMethodField()
     venue=serializers.SerializerMethodField()
     event_start=serializers.SerializerMethodField()
@@ -171,7 +172,12 @@ class EventSerializer(serializers.ModelSerializer):
         return eventLikeStatus.count()    
     def get_joined_count(self,obj):
         eventJoinedStatus=EventStatus.objects.filter(event_id=obj.id,joined=True)
-        return eventJoinedStatus.count()            
+        return eventJoinedStatus.count()
+    def get_joined_users(self,obj):
+        userIds=EventStatus.objects.filter(event_id=obj.id,joined=True).values("user_id")
+        users=User.objects.filter(pk__in=userIds)
+        serializer=EventUserSerializer(users,many=True)
+        return serializer.data                
     def get_user(self,obj):
         serializer=EventUserSerializer(obj.user_id)
         return serializer.data
